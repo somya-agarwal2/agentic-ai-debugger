@@ -530,7 +530,7 @@ function AgentTimeline() {
 const LandingPage = ({ onEnter, onDemo, onChallenge }) => {
   const [howRef, howInView] = useInView(0.1);
   const [featRef, featInView] = useInView(0.1);
-  const [ctaRef, ctaInView] = useInView(0.2);
+  const [feedbackRef, feedbackInView] = useInView(0.2);
   const [isDocsOpen, setIsDocsOpen] = useState(false);
 
   const FEATURES = [
@@ -555,7 +555,7 @@ const LandingPage = ({ onEnter, onDemo, onChallenge }) => {
         style={{ background: 'rgba(5,11,24,0.7)', backdropFilter: 'blur(16px)' }}>
         <div className="flex items-center font-black text-xl tracking-tighter">
           <Bot className="text-cyan-400 mr-2.5" size={24} />
-          DevAgent
+          AgentSmiths
         </div>
         <div className="hidden lg:flex items-center gap-8">
           <a href="#how-it-works" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Features</a>
@@ -614,8 +614,8 @@ const LandingPage = ({ onEnter, onDemo, onChallenge }) => {
               Production Ready Agent
             </div>
             <h1 className="text-5xl md:text-6xl xl:text-7xl font-black tracking-tight mb-6 leading-[1.05]">
-              Autonomous<br />
-              <span className="text-gradient">AI Debugger</span>
+              Welcome to<br />
+              <span className="text-gradient">AgentSmiths</span>
             </h1>
             <p className="text-lg md:text-xl text-gray-400/80 mb-10 leading-relaxed max-w-lg">
               The first AI agent that monitors, diagnoses, and repairs logical flaws in your codebase autonomously.
@@ -751,9 +751,9 @@ const LandingPage = ({ onEnter, onDemo, onChallenge }) => {
             </div>
             
             <div className="flex flex-wrap justify-center gap-6">
-              <a href="mailto:support@devagent.ai" className="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 hover:border-cyan-500/50 hover:bg-white/10 transition-all group flex items-center gap-3">
+              <a href="mailto:support@agentsmiths.ai" className="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 hover:border-cyan-500/50 hover:bg-white/10 transition-all group flex items-center gap-3">
                 <Bot size={20} className="text-cyan-400 group-hover:scale-110 transition-transform" />
-                <span className="font-bold text-sm">support@devagent.ai</span>
+                <span className="font-bold text-sm">support@agentsmiths.ai</span>
               </a>
               <div className="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 hover:border-purple-500/50 hover:bg-white/10 transition-all group flex items-center gap-3 cursor-pointer">
                 <GitPullRequest size={20} className="text-purple-400 group-hover:scale-110 transition-transform" />
@@ -764,77 +764,50 @@ const LandingPage = ({ onEnter, onDemo, onChallenge }) => {
         </div>
       </section>
 
-      {/* ── DOCS ── */}
-      <section id="docs" className="py-32 px-6 relative" style={{ background: '#050B18' }}>
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-20">
-            <p className="text-[10px] uppercase tracking-[0.4em] text-cyan-400 font-black mb-4">Documentation</p>
-            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">Getting Started</h2>
+      {/* ── FEEDBACK & QUERIES ── */}
+      <section id="feedback" ref={feedbackRef} className={`py-32 px-6 relative transition-all duration-1000 ${feedbackInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ background: '#050B18' }}>
+        <div className="max-w-4xl mx-auto glass-panel rounded-3xl p-10 border border-white/10">
+          <div className="text-center mb-12">
+            <p className="text-[10px] uppercase tracking-[0.4em] text-cyan-400 font-black mb-4">We want to hear from you</p>
+            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">Feedback, Queries & Recommendations</h2>
           </div>
-          
-          <div className="grid md:grid-cols-2 gap-12">
-            <div className="space-y-8">
-              <div className="glass-panel p-8 rounded-3xl border border-white/5 space-y-4">
-                <h3 className="text-xl font-bold flex items-center gap-3">
-                  <span className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">01</span>
-                  Setup Workspace
-                </h3>
-                <p className="text-sm text-gray-400 leading-relaxed">Click "Open Workspace" to enter the IDE. You can sync your GitHub account or start a local session immediately.</p>
+          <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Name</label>
+                <input type="text" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-400/50 transition-colors" placeholder="John Doe" />
               </div>
-              <div className="glass-panel p-8 rounded-3xl border border-white/5 space-y-4">
-                <h3 className="text-xl font-bold flex items-center gap-3">
-                  <span className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs">02</span>
-                  Agent Configuration
-                </h3>
-                <p className="text-sm text-gray-400 leading-relaxed">Select your AI personality (Friendly, Strict, or Funny) and set the monitoring interval for your repository.</p>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Email</label>
+                <input type="email" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-400/50 transition-colors" placeholder="john@example.com" />
               </div>
             </div>
-            
-            <div className="space-y-8">
-              <div className="glass-panel p-8 rounded-3xl border border-white/5 space-y-4">
-                <h3 className="text-xl font-bold flex items-center gap-3">
-                  <span className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs">03</span>
-                  Bug Resolution
-                </h3>
-                <p className="text-sm text-gray-400 leading-relaxed">When the agent identifies a bug, review the "Reasoning" tab to understand the flaw before applying the patch.</p>
-              </div>
-              <div className="glass-panel p-8 rounded-3xl border border-white/5 space-y-4">
-                <h3 className="text-xl font-bold flex items-center gap-3">
-                  <span className="w-8 h-8 rounded-lg bg-orange-500/20 text-orange-400 flex items-center justify-center text-xs">04</span>
-                  Deploy & PR
-                </h3>
-                <p className="text-sm text-gray-400 leading-relaxed">Once the fix passes internal tests, use the "Export to PR" button to push changes back to your GitHub repo.</p>
-              </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Type</label>
+              <select className="w-full bg-[#0d1117] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-400/50 transition-colors appearance-none">
+                <option>Feedback</option>
+                <option>Query</option>
+                <option>Recommendation to Improve</option>
+              </select>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA ── */}
-      <section ref={ctaRef} className="py-40 px-6 relative overflow-hidden">
-        {/* Animated Background Glow */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] rounded-full opacity-20"
-             style={{ background: 'radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 60%)', filter: 'blur(100px)' }} />
-        </div>
-        
-        <div className={`max-w-3xl mx-auto text-center relative z-10 transition-all duration-1000 ${ctaInView ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
-          <p className="text-[10px] uppercase tracking-[0.4em] text-cyan-400 font-black mb-6">Experience the Future</p>
-          <h2 className="text-5xl md:text-6xl font-black text-white mb-8 leading-[1.1] tracking-tighter">Automate your<br />debug workflow.</h2>
-          <p className="text-gray-400 text-lg mb-12 max-w-xl mx-auto leading-relaxed">Join elite teams using DevAgent to identify logical flaws in real-time. No configuration needed.</p>
-          <button onClick={onEnter} className="btn-primary inline-flex items-center gap-4 px-12 py-5 rounded-full font-black text-xl text-white">
-            Enter Workspace <ArrowRight size={22} />
-          </button>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Message</label>
+              <textarea rows={5} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-400/50 transition-colors resize-none" placeholder="How can we improve?"></textarea>
+            </div>
+            <button className="btn-primary w-full py-4 rounded-xl font-bold text-white mt-4">
+              Submit
+            </button>
+          </form>
         </div>
       </section>
 
       <footer className="py-12 border-t border-white/[0.05] text-center" style={{ background: '#050B18' }}>
         <div className="flex items-center justify-center gap-2 mb-4 opacity-50">
            <Bot size={18} className="text-cyan-400" />
-           <span className="font-bold text-sm tracking-tighter text-white">DevAgent</span>
+           <span className="font-bold text-sm tracking-tighter text-white">AgentSmiths</span>
         </div>
         <div className="text-[11px] text-gray-500 font-medium tracking-wide">
-          Powered by OpenAI GPT-4o &bull; &copy; 2024 Autonomous AI Debugger
+          &copy; 2024 AgentSmiths. All rights reserved.
         </div>
       </footer>
       
