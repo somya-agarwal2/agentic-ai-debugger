@@ -8,6 +8,7 @@ import CursorGuide from './components/demo/CursorGuide';
 import AgentPipeline from './components/AgentPipeline';
 import PRWorkflow from './components/PRWorkflow';
 import IssuesPanel from './components/IssuesPanel';
+import ChallengePage from './components/challenge/ChallengePage';
 import { api } from './services/api';
 import { useDemoController } from './hooks/useDemoController';
 import { DEMO_STEPS } from './constants/demoSteps';
@@ -674,7 +675,28 @@ function App() {
         </div>
       );
     }
-    return <LandingPage onEnter={handleEnterWorkspace} onDemo={handleDemoProject} />;
+    return <LandingPage onEnter={handleEnterWorkspace} onDemo={handleDemoProject} onChallenge={() => setScreen('challenge')} />;
+  }
+
+  if (screen === 'challenge') {
+    return (
+      <div className="h-screen w-screen flex flex-col overflow-hidden" style={{ background: '#0B0F19' }}>
+        <header className="h-14 flex items-center px-8 shrink-0 justify-between glass-panel border-b border-white/5 z-50">
+          <div className="font-black tracking-tighter text-lg flex items-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setScreen('landing')}>
+            <Bot size={22} className="text-cyan-400 mr-2.5 animate-float" />
+            <span className="text-gradient font-black">DevAgent</span>
+          </div>
+          <div className="flex items-center gap-6">
+            <button onClick={() => setScreen('workspace')} className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-colors">Workspace</button>
+            <button onClick={() => setScreen('challenge')} className="text-[10px] font-black uppercase tracking-widest text-cyan-400 border-b-2 border-cyan-400 py-1">Challenge</button>
+            <button onClick={() => setScreen('landing')} className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-colors">Home</button>
+          </div>
+        </header>
+        <div className="flex-1 overflow-y-auto">
+          <ChallengePage onBackToHome={() => setScreen('landing')} />
+        </div>
+      </div>
+    );
   }
 
   if (!repositoryIssues) return null;
@@ -718,7 +740,13 @@ function App() {
             DevAgent <span className="text-[10px] text-gray-500 font-bold tracking-widest ml-2 opacity-50">PRO</span>
           </span>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-6">
+            <button onClick={() => setScreen('workspace')} className={`text-[10px] font-black uppercase tracking-widest transition-colors ${screen === 'workspace' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}>Workspace</button>
+            <button onClick={() => setScreen('challenge')} className={`text-[10px] font-black uppercase tracking-widest transition-colors ${screen === 'challenge' ? 'text-cyan-400' : 'text-gray-500 hover:text-gray-300'}`}>Challenge</button>
+            <button className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-gray-300">Docs</button>
+          </nav>
+          <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-3 py-1.5 mr-4">
             <span className={`text-[9px] font-black uppercase tracking-widest ${isDemoMode ? 'text-cyan-400' : 'text-gray-500'}`}>Demo</span>
             <button 
@@ -769,7 +797,8 @@ function App() {
             </button>
           )}
         </div>
-      </header>
+      </div>
+    </header>
 
 
       <div className="flex-1 flex overflow-hidden">

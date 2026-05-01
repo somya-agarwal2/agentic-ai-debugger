@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot, Zap, CheckCircle, GitPullRequest, ArrowRight, Play, Upload, Search, Wrench, ChevronRight } from 'lucide-react';
+import SmartTooltip from './SmartTooltip';
 
 function useInView(threshold = 0.15) {
   const ref = useRef(null);
@@ -489,7 +490,7 @@ const TIMELINE = [
 function AgentTimeline() {
   const [ref, inView] = useInView(0.1);
   return (
-    <section ref={ref} className="py-28 px-6" style={{ background: '#0e1420' }}>
+    <section id="pipeline" ref={ref} className="py-28 px-6" style={{ background: '#0e1420' }}>
       <div className="max-w-2xl mx-auto">
         <div className={`text-center mb-16 transition-all duration-700 ${inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <p className="text-xs uppercase tracking-widest text-cyan-400 font-semibold mb-3">Pipeline</p>
@@ -525,7 +526,7 @@ function AgentTimeline() {
 }
 
 // ── Main Landing Page ──
-const LandingPage = ({ onEnter, onDemo }) => {
+const LandingPage = ({ onEnter, onDemo, onChallenge }) => {
   const [howRef, howInView] = useInView(0.1);
   const [featRef, featInView] = useInView(0.1);
   const [ctaRef, ctaInView] = useInView(0.2);
@@ -553,6 +554,28 @@ const LandingPage = ({ onEnter, onDemo }) => {
         <div className="flex items-center font-black text-xl tracking-tighter">
           <Bot className="text-cyan-400 mr-2.5" size={24} />
           DevAgent
+        </div>
+        <div className="hidden lg:flex items-center gap-8">
+          <a href="#how-it-works" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Features</a>
+          <a href="#pipeline" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">How it works</a>
+          <SmartTooltip message="Solve daily logic puzzles & earn badges!">
+            <button 
+              onClick={onChallenge} 
+              className="group relative px-4 py-1.5 rounded-full text-sm font-bold text-white transition-all duration-300 hover:scale-105 active:scale-95"
+            >
+              <div className="absolute inset-0 bg-cyan-500/10 border border-cyan-500/30 rounded-full blur-[2px] group-hover:bg-cyan-500/20 group-hover:border-cyan-500/50 transition-all" />
+              <span className="relative z-10 flex items-center gap-2">
+                Challenge
+                <span className="flex h-2 w-2 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                </span>
+              </span>
+            </button>
+          </SmartTooltip>
+          <a href="#hero" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Docs</a>
+          <a href="#roadmap" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Roadmap</a>
+          <a href="#contact" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Contact</a>
         </div>
         <button onClick={onEnter} className="btn-primary text-sm font-bold px-6 py-2.5 rounded-full text-white flex items-center gap-2">
           Workspace <ArrowRight size={16} />
@@ -678,6 +701,107 @@ const LandingPage = ({ onEnter, onDemo }) => {
 
       {/* ── AGENT TIMELINE ── */}
       <AgentTimeline />
+
+      {/* ── ROADMAP ── */}
+      <section id="roadmap" className="py-32 px-6 relative overflow-hidden" style={{ background: '#050B18' }}>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-20">
+            <p className="text-[10px] uppercase tracking-[0.4em] text-cyan-400 font-black mb-4">The Future</p>
+            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">Project Roadmap</h2>
+          </div>
+          
+          <div className="grid md:grid-cols-4 gap-8 relative">
+            <div className="absolute top-1/2 left-0 right-0 h-px bg-white/5 hidden md:block" />
+            {[
+              { phase: 'Q1 2024', title: 'Agent Core', status: 'Completed', desc: 'Core reasoning engine and Gemini 1.5 integration.', active: false },
+              { phase: 'Q2 2024', title: 'Multi-Language', status: 'In Progress', desc: 'Support for JS, Go, and Rust ecosystems.', active: true },
+              { phase: 'Q3 2024', title: 'IDE Extensions', status: 'Planned', desc: 'Native VS Code and JetBrains extension suite.', active: false },
+              { phase: 'Q4 2024', title: 'Self-Hosted', status: 'Planned', desc: 'Enterprise-grade local agent deployment.', active: false },
+            ].map((item, i) => (
+              <div key={i} className={`relative p-8 rounded-3xl border transition-all duration-500 ${item.active ? 'border-cyan-500/50 bg-cyan-500/5 shadow-glow-blue/10' : 'border-white/5 bg-white/[0.02]'}`}>
+                <div className={`w-3 h-3 rounded-full absolute -top-1.5 left-1/2 -translate-x-1/2 z-20 ${item.active ? 'bg-cyan-400 shadow-glow-blue' : 'bg-gray-800 border border-white/10'}`} />
+                <div className="text-[10px] font-black text-cyan-400 uppercase tracking-widest mb-2">{item.phase}</div>
+                <h3 className="text-xl font-bold text-white mb-2">{item.title}</h3>
+                <div className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full inline-block mb-4 ${item.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-400' : item.active ? 'bg-cyan-500/10 text-cyan-400 animate-pulse' : 'bg-white/5 text-gray-500'}`}>
+                  {item.status}
+                </div>
+                <p className="text-sm text-gray-400 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CONTACT ── */}
+      <section id="contact" className="py-32 px-6 relative" style={{ background: '#0b0f17' }}>
+        <div className="max-w-4xl mx-auto glass-panel rounded-[3rem] p-12 md:p-20 text-center relative overflow-hidden">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-cyan-500/10 rounded-full blur-[80px] pointer-events-none" />
+          
+          <div className="relative z-10 space-y-8">
+            <div className="space-y-4">
+              <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter">Get in touch.</h2>
+              <p className="text-gray-400 max-w-lg mx-auto">Have questions about the agentic workflow or need enterprise support? Our team is here to help.</p>
+            </div>
+            
+            <div className="flex flex-wrap justify-center gap-6">
+              <a href="mailto:support@devagent.ai" className="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 hover:border-cyan-500/50 hover:bg-white/10 transition-all group flex items-center gap-3">
+                <Bot size={20} className="text-cyan-400 group-hover:scale-110 transition-transform" />
+                <span className="font-bold text-sm">support@devagent.ai</span>
+              </a>
+              <div className="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 hover:border-purple-500/50 hover:bg-white/10 transition-all group flex items-center gap-3 cursor-pointer">
+                <GitPullRequest size={20} className="text-purple-400 group-hover:scale-110 transition-transform" />
+                <span className="font-bold text-sm">Join Discord</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── DOCS ── */}
+      <section id="docs" className="py-32 px-6 relative" style={{ background: '#050B18' }}>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-20">
+            <p className="text-[10px] uppercase tracking-[0.4em] text-cyan-400 font-black mb-4">Documentation</p>
+            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">Getting Started</h2>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-12">
+            <div className="space-y-8">
+              <div className="glass-panel p-8 rounded-3xl border border-white/5 space-y-4">
+                <h3 className="text-xl font-bold flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">01</span>
+                  Setup Workspace
+                </h3>
+                <p className="text-sm text-gray-400 leading-relaxed">Click "Open Workspace" to enter the IDE. You can sync your GitHub account or start a local session immediately.</p>
+              </div>
+              <div className="glass-panel p-8 rounded-3xl border border-white/5 space-y-4">
+                <h3 className="text-xl font-bold flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs">02</span>
+                  Agent Configuration
+                </h3>
+                <p className="text-sm text-gray-400 leading-relaxed">Select your AI personality (Friendly, Strict, or Funny) and set the monitoring interval for your repository.</p>
+              </div>
+            </div>
+            
+            <div className="space-y-8">
+              <div className="glass-panel p-8 rounded-3xl border border-white/5 space-y-4">
+                <h3 className="text-xl font-bold flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs">03</span>
+                  Bug Resolution
+                </h3>
+                <p className="text-sm text-gray-400 leading-relaxed">When the agent identifies a bug, review the "Reasoning" tab to understand the flaw before applying the patch.</p>
+              </div>
+              <div className="glass-panel p-8 rounded-3xl border border-white/5 space-y-4">
+                <h3 className="text-xl font-bold flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-lg bg-orange-500/20 text-orange-400 flex items-center justify-center text-xs">04</span>
+                  Deploy & PR
+                </h3>
+                <p className="text-sm text-gray-400 leading-relaxed">Once the fix passes internal tests, use the "Export to PR" button to push changes back to your GitHub repo.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ── CTA ── */}
       <section ref={ctaRef} className="py-40 px-6 relative overflow-hidden">
