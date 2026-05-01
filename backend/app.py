@@ -9,8 +9,9 @@ from flask import Flask, request, jsonify, session, redirect
 from flask_cors import CORS
 from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor
-from tools import analyze_code, generate_fix, run_tests, validate_code_input
-from agent import run_agent_loop
+from agent.tools import analyze_code, generate_fix, run_tests, validate_code_input
+from agent.runner import run_agent_loop
+from services.prompt_service import load_prompts, save_prompts
 
 load_dotenv()
 
@@ -87,12 +88,10 @@ def github_logout():
 
 @app.route('/prompts', methods=['GET'])
 def get_prompts():
-    from tools import load_prompts
     return jsonify(load_prompts()), 200
 
 @app.route('/prompts', methods=['POST'])
 def update_prompts():
-    from tools import save_prompts
     try:
         data = request.get_json()
         save_prompts(data)

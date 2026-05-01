@@ -2,7 +2,9 @@ import os
 import json
 from typing import List
 from .state import AgentIssue, AgentState
-from tools import analyze_code, load_prompts, call_ollama
+from agent.tools import analyze_code
+from services.prompt_service import load_prompts
+from services.llm_service import call_ollama
 
 class Planner:
     def __init__(self, state: AgentState):

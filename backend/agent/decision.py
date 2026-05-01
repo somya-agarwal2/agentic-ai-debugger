@@ -1,7 +1,8 @@
 import json
 from typing import Optional
 from .state import AgentIssue, AgentState
-from tools import load_prompts, call_ollama
+from services.prompt_service import load_prompts
+from services.llm_service import call_ollama
 
 class DecisionMaker:
     def __init__(self, state: AgentState):

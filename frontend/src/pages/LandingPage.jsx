@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot, Zap, CheckCircle, GitPullRequest, ArrowRight, Play, Upload, Search, Wrench, ChevronRight } from 'lucide-react';
-import SmartTooltip from './SmartTooltip';
-import DocsModal from './DocsModal';
+import SmartTooltip from '../components/SmartTooltip';
+import DocsModal from '../components/DocsModal';
 
 function useInView(threshold = 0.15) {
   const ref = useRef(null);
@@ -613,7 +613,7 @@ const LandingPage = ({ onEnter, onDemo, onChallenge }) => {
               <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#22d3ee]" />
               Production Ready Agent
             </div>
-            <h1 className="text-5xl md:text-6xl xl:text-7xl font-black tracking-tight mb-6 leading-[1.05]">
+            <h1 className="text-4xl md:text-5xl xl:text-6xl font-extrabold tracking-tight mb-6 leading-tight">
               Welcome to<br />
               <span className="text-gradient">AgentSmiths</span>
             </h1>
@@ -766,13 +766,15 @@ const LandingPage = ({ onEnter, onDemo, onChallenge }) => {
 
       {/* ── FEEDBACK & QUERIES ── */}
       <section id="feedback" ref={feedbackRef} className={`py-32 px-6 relative transition-all duration-1000 ${feedbackInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ background: '#050B18' }}>
-        <div className="max-w-4xl mx-auto glass-panel rounded-3xl p-10 border border-white/10">
-          <div className="text-center mb-12">
-            <p className="text-[10px] uppercase tracking-[0.4em] text-cyan-400 font-black mb-4">We want to hear from you</p>
-            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">Feedback, Queries & Recommendations</h2>
-          </div>
-          <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
-            <div className="grid md:grid-cols-2 gap-6">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
+          
+          {/* Left Form - Feedback */}
+          <div className="glass-panel rounded-3xl p-10 border border-white/10 flex flex-col">
+            <div className="mb-8">
+              <p className="text-[10px] uppercase tracking-[0.4em] text-cyan-400 font-black mb-3">Rate your experience</p>
+              <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">Share Feedback</h2>
+            </div>
+            <form className="space-y-6 flex-1 flex flex-col" onSubmit={(e) => e.preventDefault()}>
               <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Name</label>
                 <input type="text" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-400/50 transition-colors" placeholder="John Doe" />
@@ -781,23 +783,47 @@ const LandingPage = ({ onEnter, onDemo, onChallenge }) => {
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Email</label>
                 <input type="email" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-400/50 transition-colors" placeholder="john@example.com" />
               </div>
+              <div className="space-y-2 flex-1">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Your Feedback</label>
+                <textarea rows={4} className="w-full h-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-400/50 transition-colors resize-none" placeholder="Tell us what you love or hate about AgentSmiths..."></textarea>
+              </div>
+              <button className="btn-primary w-full py-4 rounded-xl font-bold text-white mt-auto">
+                Submit Feedback
+              </button>
+            </form>
+          </div>
+
+          {/* Right Form - Queries & Recommendations */}
+          <div className="glass-panel rounded-3xl p-10 border border-white/10 flex flex-col">
+            <div className="mb-8">
+              <p className="text-[10px] uppercase tracking-[0.4em] text-purple-400 font-black mb-3">Need help or have ideas?</p>
+              <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">Queries & Ideas</h2>
             </div>
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Type</label>
-              <select className="w-full bg-[#0d1117] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-400/50 transition-colors appearance-none">
-                <option>Feedback</option>
-                <option>Query</option>
-                <option>Recommendation to Improve</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Message</label>
-              <textarea rows={5} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-400/50 transition-colors resize-none" placeholder="How can we improve?"></textarea>
-            </div>
-            <button className="btn-primary w-full py-4 rounded-xl font-bold text-white mt-4">
-              Submit
-            </button>
-          </form>
+            <form className="space-y-6 flex-1 flex flex-col" onSubmit={(e) => e.preventDefault()}>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Name</label>
+                  <input type="text" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-400/50 transition-colors" placeholder="Jane Doe" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Type</label>
+                  <select className="w-full bg-[#0d1117] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-400/50 transition-colors appearance-none">
+                    <option>General Query</option>
+                    <option>Technical Support</option>
+                    <option>Feature Recommendation</option>
+                  </select>
+                </div>
+              </div>
+              <div className="space-y-2 flex-1">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Message</label>
+                <textarea rows={6} className="w-full h-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-400/50 transition-colors resize-none" placeholder="How can we help or what feature should we build next?"></textarea>
+              </div>
+              <button className="w-full py-4 rounded-xl font-bold text-white mt-auto bg-purple-600/80 hover:bg-purple-600 transition-colors shadow-[0_0_20px_rgba(168,85,247,0.3)]">
+                Send Message
+              </button>
+            </form>
+          </div>
+
         </div>
       </section>
 
