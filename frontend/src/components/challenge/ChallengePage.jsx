@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Timer as TimerIcon, Play, CheckCircle2, XCircle, ChevronRight, Brain, Code as CodeIcon, Trophy, AlertCircle, RefreshCw } from 'lucide-react';
+import { Timer as TimerIcon, Play, CheckCircle2, XCircle, ChevronRight, Brain, Code as CodeIcon, Trophy, AlertCircle, RefreshCw, Home, ArrowLeft } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 
 const CHALLENGES = [
@@ -257,6 +257,22 @@ const ChallengePage = ({ onBackToHome }) => {
 
       <div className="max-w-7xl mx-auto space-y-10 relative z-10">
         
+        {/* TOP NAVIGATION */}
+        <div className="flex items-center justify-between mb-2">
+          <button 
+            onClick={onBackToHome}
+            className="group flex items-center gap-2 py-2 transition-all active:scale-95"
+          >
+            <ArrowLeft size={14} className="text-gray-500 group-hover:text-cyan-400 transition-colors" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 group-hover:text-white transition-colors">Home</span>
+          </button>
+          
+          <div className="hidden md:flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-glow-blue" />
+            <span className="text-[9px] font-black uppercase tracking-widest text-gray-600">Challenge Environment Active</span>
+          </div>
+        </div>
+
         {/* HEADER SECTION */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
           <div className="space-y-4">

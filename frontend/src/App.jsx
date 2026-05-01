@@ -14,7 +14,7 @@ import { api } from './services/api';
 import { useDemoController } from './hooks/useDemoController';
 import { DEMO_STEPS } from './constants/demoSteps';
 import JSZip from 'jszip';
-import { Bot, X, AlertCircle, CheckCircle2, GitPullRequest, ExternalLink, Sparkles, ShieldCheck, Search, LayoutPanelLeft, Settings2, Download } from 'lucide-react';
+import { Bot, X, AlertCircle, CheckCircle2, GitPullRequest, ExternalLink, Sparkles, ShieldCheck, Search, LayoutPanelLeft, Settings2, Download, Home } from 'lucide-react';
 
 const DEFAULT_FILES = [];
 
@@ -933,14 +933,23 @@ function App() {
           borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
           zIndex: 40
         }}>
-        <div
-          className="font-black tracking-tighter text-lg flex items-center cursor-pointer hover:opacity-80 transition-opacity"
-          onClick={() => setScreen('landing')}
-        >
-          <Bot size={22} className="text-cyan-400 mr-2.5 animate-float" />
-          <span className="text-gradient font-black">
-            DevAgent <span className="text-[10px] text-gray-500 font-bold tracking-widest ml-2 opacity-50">PRO</span>
-          </span>
+        <div className="flex items-center gap-6">
+          <div
+            className="font-black tracking-tighter text-lg flex items-center cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => setScreen('landing')}
+          >
+            <Bot size={22} className="text-cyan-400 mr-2.5 animate-float" />
+            <span className="text-gradient font-black">
+              AgentSmiths <span className="text-[10px] text-gray-500 font-bold tracking-widest ml-2 opacity-50">PRO</span>
+            </span>
+          </div>
+
+          <button 
+            onClick={() => setScreen('landing')}
+            className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-all group"
+          >
+            <Home size={12} className="group-hover:text-cyan-400 transition-colors" /> Home
+          </button>
         </div>
         <div className="flex items-center gap-4">
           {/* Mode Toggle hidden visually */}
@@ -956,6 +965,8 @@ function App() {
               <span className={`text-[9px] font-black uppercase tracking-widest ${!isDemoMode ? 'text-blue-400' : 'text-gray-500'}`}>Real</span>
             </div>
           )}
+
+
 
           {isAgentThinking && (
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-cyan-400 px-3 py-1 rounded-full bg-cyan-400/10 border border-cyan-400/20 shadow-glow-blue animate-pulse">
