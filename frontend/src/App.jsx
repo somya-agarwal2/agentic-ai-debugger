@@ -3,6 +3,7 @@ import FileTree from './components/FileTree';
 import CodeEditor from './components/CodeEditor';
 import AIAssistant from './components/AIAssistant';
 import LandingPage from './components/LandingPage';
+import ChallengePage from './components/challenge/ChallengePage';
 import LogsPanel from './components/LogsPanel';
 import CursorGuide from './components/demo/CursorGuide';
 import AgentPipeline from './components/AgentPipeline';
@@ -833,6 +834,14 @@ function App() {
     }, 1200);
   };
 
+  const handleChallengeEnter = () => {
+    setIsInitializing(true);
+    setTimeout(() => {
+      setIsInitializing(false);
+      setScreen('challenge');
+    }, 1000);
+  };
+
   const handleStopDemo = () => {
     setIsDemoMode(false);
     setIsGuidedDemoActive(false);
@@ -881,7 +890,15 @@ function App() {
         </div>
       );
     }
-    return <LandingPage onEnter={handleEnterWorkspace} onDemo={handleDemoProject} />;
+    return <LandingPage 
+      onEnter={handleEnterWorkspace} 
+      onDemo={handleDemoProject} 
+      onChallenge={handleChallengeEnter}
+    />;
+  }
+
+  if (screen === 'challenge') {
+    return <ChallengePage onBackToHome={() => setScreen('landing')} />;
   }
 
   if (!repositoryIssues) return null;
