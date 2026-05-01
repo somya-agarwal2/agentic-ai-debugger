@@ -189,8 +189,11 @@ const PRWorkflow = ({
                 className="flex-1 py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl font-black text-xs text-gray-400 uppercase tracking-widest transition-all">
                 Cancel
               </button>
-              <button onClick={handleCreate}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-vscode-accent hover:opacity-90 rounded-2xl font-black text-xs text-white uppercase tracking-widest transition-all shadow-glow-blue active:scale-95">
+              <button 
+                id="publish-pr-btn"
+                onClick={handleCreate}
+                className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-vscode-accent hover:opacity-90 rounded-2xl font-black text-xs text-white uppercase tracking-widest transition-all shadow-glow-blue active:scale-95"
+              >
                 <GitPullRequest size={14} />
                 Create Pull Request
                 <ArrowRight size={14} />

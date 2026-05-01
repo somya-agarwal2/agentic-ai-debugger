@@ -17,7 +17,9 @@ export const DEMO_STEPS = {
   // ── Phase 2: Second repo (devagent-demo/mathematics-suite) ──
   REPO2_ANALYZING:   'repo2_analyzing',
   REPO2_OPEN_ISSUES: 'repo2_open_issues',
-  REPO2_SELECT_ISSUE:'repo2_select_issue',
+  REPO2_SELECT_ISSUE: 'repo2_select_issue',
+  REPO2_OPEN_PR:     'repo2_open_pr',
+  REPO2_PUBLISH_PR:  'repo2_publish_pr',
 
   DONE: 'done'
 };
@@ -95,10 +97,22 @@ export const STEP_CONFIG = {
     autoClick: true,
     autoClickDelay: 3000,
   },
+  [DEMO_STEPS.REPO2_OPEN_PR]: {
+    selector: '#create-pr-btn',
+    message: 'Let the Agent prepare a Pull Request...',
+    autoClick: true,
+    autoClickDelay: 4000,
+  },
+  [DEMO_STEPS.REPO2_PUBLISH_PR]: {
+    selector: '#publish-pr-btn',
+    message: 'Finally, publish the verified fix to GitHub!',
+    autoClick: true,
+    autoClickDelay: 5000,
+  },
 
   [DEMO_STEPS.DONE]: {
     selector: null,
-    message: '🎉 Full cycle complete — bugs found & fixed across 2 repos!',
+    message: '🎉 Full Cycle Complete! Issues found and PRs ready across both repositories.',
     autoClick: false,
   }
 };

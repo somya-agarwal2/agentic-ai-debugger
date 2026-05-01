@@ -160,8 +160,7 @@ const CodeEditor = ({
         <div className="h-14 flex items-center px-6 gap-4 justify-between shrink-0 border-b border-white/5"
           style={{ background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(20px)' }}>
 
-          <button
-            id="agent-toggle"
+          <button 
             onClick={setIsAgentMode}
             className={`flex items-center gap-3 px-4 py-2 rounded-full border text-xs font-black tracking-tight transition-all duration-300 ${
               isAgentMode
@@ -171,7 +170,7 @@ const CodeEditor = ({
           >
             <ShieldAlert size={14} className={isAgentMode ? 'text-green-400' : 'text-gray-600'} />
             Agent Mode
-            <div className={`w-8 h-4 rounded-full relative transition-all duration-300 ${isAgentMode ? 'bg-green-500' : 'bg-gray-700'}`}>
+            <div id="agent-toggle" className={`w-8 h-4 rounded-full relative transition-all duration-300 ${isAgentMode ? 'bg-green-500' : 'bg-gray-700'}`}>
               <div className={`w-2.5 h-2.5 rounded-full bg-white absolute top-0.5 transition-all duration-300 shadow ${isAgentMode ? 'left-5' : 'left-0.5'}`} />
             </div>
           </button>

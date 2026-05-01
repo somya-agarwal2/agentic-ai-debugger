@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot, Zap, CheckCircle, GitPullRequest, ArrowRight, Play, Upload, Search, Wrench, ChevronRight } from 'lucide-react';
 import SmartTooltip from './SmartTooltip';
+import DocsModal from './DocsModal';
 
 function useInView(threshold = 0.15) {
   const ref = useRef(null);
@@ -481,7 +482,7 @@ function HeroDemoStrip() {
 // ── Agent Timeline ──
 const TIMELINE = [
   { icon: '🔍', label: 'Scanning', desc: 'Continuously monitors file changes in real time' },
-  { icon: '🧠', label: 'Analyzing', desc: 'Gemini AI detects logical errors and intent mismatches' },
+  { icon: '🧠', label: 'Analyzing', desc: 'OpenAI GPT-4o detects logical errors and intent mismatches' },
   { icon: '🔧', label: 'Fixing', desc: 'Generates and applies deterministic code patches' },
   { icon: '✅', label: 'Testing', desc: 'Runs automated test suite with retry logic' },
   { icon: '🚀', label: 'PR Created', desc: 'Opens pull request with full diff and explanation' },
@@ -530,9 +531,10 @@ const LandingPage = ({ onEnter, onDemo, onChallenge }) => {
   const [howRef, howInView] = useInView(0.1);
   const [featRef, featInView] = useInView(0.1);
   const [ctaRef, ctaInView] = useInView(0.2);
+  const [isDocsOpen, setIsDocsOpen] = useState(false);
 
   const FEATURES = [
-    { icon: <Zap size={22} />, color: 'blue',   title: 'AI Debugging',     desc: 'Deep logical analysis by Gemini to catch intent mismatches and syntax errors.' },
+    { icon: <Zap size={22} />, color: 'blue',   title: 'AI Debugging',     desc: 'Deep logical analysis by GPT-4o to catch intent mismatches and syntax errors.' },
     { icon: <Bot size={22} />, color: 'purple', title: 'Auto Fix',         desc: 'Deterministic, context-aware code patches generated instantly.' },
     { icon: <CheckCircle size={22} />, color: 'orange', title: 'Test Validation', desc: 'Retry logic — if the fix fails tests, the agent learns and retries.' },
     { icon: <GitPullRequest size={22} />, color: 'green', title: 'PR Simulation', desc: 'Packages tested patches into clean pull requests automatically.' },
@@ -573,7 +575,12 @@ const LandingPage = ({ onEnter, onDemo, onChallenge }) => {
               </span>
             </button>
           </SmartTooltip>
-          <a href="#hero" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Docs</a>
+          <button 
+            onClick={() => setIsDocsOpen(true)}
+            className="text-sm font-medium text-gray-400 hover:text-white transition-colors cursor-pointer"
+          >
+            Docs
+          </button>
           <a href="#roadmap" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Roadmap</a>
           <a href="#contact" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Contact</a>
         </div>
@@ -650,7 +657,7 @@ const LandingPage = ({ onEnter, onDemo, onChallenge }) => {
           <div className="grid md:grid-cols-3 gap-8">
             {[
               { icon: <Upload size={28} />, step: '01', title: 'Load Code', desc: 'Sync your GitHub repository or paste code directly into the workspace.' },
-              { icon: <Search size={28} />, step: '02', title: 'AI Analysis', desc: 'Agent performs deep structural and logical audit using Gemini 1.5 Pro.' },
+              { icon: <Search size={28} />, step: '02', title: 'AI Analysis', desc: 'Agent performs deep structural and logical audit using OpenAI GPT-4o.' },
               { icon: <Wrench size={28} />, step: '03', title: 'Auto Patch', desc: 'Fixes are validated through test suites and packaged into PRs.' },
             ]?.map((card, i) => (
               <div key={i}
@@ -713,7 +720,7 @@ const LandingPage = ({ onEnter, onDemo, onChallenge }) => {
           <div className="grid md:grid-cols-4 gap-8 relative">
             <div className="absolute top-1/2 left-0 right-0 h-px bg-white/5 hidden md:block" />
             {[
-              { phase: 'Q1 2024', title: 'Agent Core', status: 'Completed', desc: 'Core reasoning engine and Gemini 1.5 integration.', active: false },
+              { phase: 'Q1 2024', title: 'Agent Core', status: 'Completed', desc: 'Core reasoning engine and GPT-4o integration.', active: false },
               { phase: 'Q2 2024', title: 'Multi-Language', status: 'In Progress', desc: 'Support for JS, Go, and Rust ecosystems.', active: true },
               { phase: 'Q3 2024', title: 'IDE Extensions', status: 'Planned', desc: 'Native VS Code and JetBrains extension suite.', active: false },
               { phase: 'Q4 2024', title: 'Self-Hosted', status: 'Planned', desc: 'Enterprise-grade local agent deployment.', active: false },
@@ -827,9 +834,12 @@ const LandingPage = ({ onEnter, onDemo, onChallenge }) => {
            <span className="font-bold text-sm tracking-tighter text-white">DevAgent</span>
         </div>
         <div className="text-[11px] text-gray-500 font-medium tracking-wide">
-          Powered by Gemini 1.5 Pro &bull; &copy; 2024 Autonomous AI Debugger
+          Powered by OpenAI GPT-4o &bull; &copy; 2024 Autonomous AI Debugger
         </div>
       </footer>
+      
+      {/* Docs Modal Overlay */}
+      <DocsModal isOpen={isDocsOpen} onClose={() => setIsDocsOpen(false)} />
     </div>
   );
 };
