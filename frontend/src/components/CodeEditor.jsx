@@ -7,9 +7,10 @@ const CodeEditor = ({
   isAgentThinking, isAgentMode, setIsAgentMode,
   onRunTests, onRunAgent,
   onFixApplied, onFixRejected, onCloseIssue, onCreatePR,
-  activeFileName = 'main.py',
+  activeFileName = 'main.py', isFixPanelOpen = false,
 }) => {
   const [hoveredBtn, setHoveredBtn] = useState(null);
+  const [showTrace, setShowTrace] = useState(false);
   
   const editorRef = useRef(null);
   const monacoRef = useRef(null);
@@ -198,13 +199,24 @@ const CodeEditor = ({
 
         {/* ── Main Editor ── */}
         <div className="flex-1 relative group min-h-0">
-          <Editor
-            height="100%"
-            language="python"
-            theme="vs-dark"
-            value={code || ''}
-            onChange={handleEditorChange}
-            onMount={handleEditorDidMount}
+          {!activeFileName ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-12 bg-[#080C14]/60 backdrop-blur-[2px]">
+              <div className="w-20 h-20 rounded-3xl bg-white/[0.02] border border-white/5 flex items-center justify-center mb-8 shadow-inner shadow-white/5">
+                <FileCode2 size={40} className="text-gray-800" />
+              </div>
+              <h3 className="text-sm font-black text-white mb-3 uppercase tracking-[0.2em]">Workspace Empty</h3>
+              <p className="text-[11px] text-gray-500 leading-relaxed max-w-[280px] font-bold">
+                Upload a ZIP project or enter a GitHub repository URL on the left to start autonomous debugging.
+              </p>
+            </div>
+          ) : (
+            <Editor
+              height="100%"
+              language="python"
+              theme="vs-dark"
+              value={code || ''}
+              onChange={handleEditorChange}
+              onMount={handleEditorDidMount}
             options={{
               readOnly: false,
               minimap: { enabled: false },
@@ -219,7 +231,8 @@ const CodeEditor = ({
               cursorBlinking: 'smooth',
               cursorSmoothCaretAnimation: 'on',
             }}
-          />
+            />
+          )}
 
           {/* Floating Success Badge */}
           {agentState?.error === 'No issues found' && (
@@ -269,7 +282,7 @@ const CodeEditor = ({
         </div>
 
         {/* ── AI Suggested Fix Resizable Panel ── */}
-        {agentState?.error && agentState.error !== 'No issues found' && (
+        {isAgentMode && isFixPanelOpen && agentState?.error && agentState.error !== 'No issues found' && (
           <>
             {/* Draggable Divider */}
             <div
@@ -293,15 +306,14 @@ const CodeEditor = ({
                 <div className="flex gap-3">
                   <button 
                     onClick={onFixRejected} 
-                    disabled={isAgentThinking}
-                    className="px-4 py-1.5 rounded-lg bg-white/5 border border-white/10 text-gray-400 text-[10px] font-bold uppercase tracking-widest hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-400 transition-all disabled:opacity-40"
+                    className="px-4 py-1.5 rounded-lg bg-white/5 border border-white/10 text-gray-400 text-[10px] font-bold uppercase tracking-widest hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-400 transition-all"
                   >
                     Reject
                   </button>
                   <button 
                     id="apply-fix-btn"
                     onClick={onFixApplied}
-                    disabled={isAgentThinking || !suggestedCode}
+                    disabled={!suggestedCode}
                     className="px-5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-cyan-400 text-[10px] font-black uppercase tracking-widest hover:bg-cyan-500/10 hover:border-cyan-400/30 transition-all active:scale-95 disabled:opacity-40"
                   >
                     Apply Fix
@@ -309,8 +321,7 @@ const CodeEditor = ({
                   <button 
                     id="create-pr-btn"
                     onClick={onCreatePR}
-                    disabled={isAgentThinking}
-                    className="flex items-center gap-2 px-5 py-1.5 rounded-lg bg-vscode-accent shadow-glow-blue text-white text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all active:scale-95 disabled:opacity-40"
+                    className="flex items-center gap-2 px-5 py-1.5 rounded-lg bg-vscode-accent shadow-glow-blue text-white text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all active:scale-95"
                   >
                     <GitPullRequest size={12} />
                     Create PR
@@ -345,6 +356,20 @@ const CodeEditor = ({
                         <p className="text-[11px] text-gray-400 leading-relaxed px-1">
                           {agentState.explanation}
                         </p>
+                        
+                        {agentState && (
+                          <button
+                            onClick={() => setShowTrace(!showTrace)}
+                            className={`w-full mt-6 flex items-center justify-center gap-2 py-3 rounded-xl border transition-all uppercase tracking-widest text-[10px] font-black ${
+                              showTrace 
+                                ? 'bg-cyan-400 text-black border-cyan-400' 
+                                : 'bg-cyan-400/5 text-cyan-400 border-cyan-400/20 hover:bg-cyan-400/10'
+                            }`}
+                          >
+                            <Activity size={14} />
+                            {showTrace ? 'Hide Trace' : '🔍 Trace Bug'}
+                          </button>
+                        )}
                       </div>
                     ) : (
                       <div className="text-[10px] text-gray-600 px-1">Select an issue for details</div>
@@ -352,7 +377,75 @@ const CodeEditor = ({
                   </div>
                 </div>
 
-                <div className="flex-1 relative">
+                <div className="flex-1 bg-black/40 overflow-hidden relative">
+                  {showTrace && agentState?.trace ? (
+                    <div className="absolute inset-0 z-50 bg-[#0B0F19] overflow-y-auto p-8 animate-fade-in">
+                      <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center gap-3">
+                          <Activity size={18} className="text-cyan-400" />
+                          <h3 className="text-sm font-black text-white uppercase tracking-widest">Bug Time Travel — Logical Trace</h3>
+                        </div>
+                        <button onClick={() => setShowTrace(false)} className="p-2 hover:bg-white/10 rounded-lg text-gray-500 hover:text-white transition-all">
+                          <X size={16} />
+                        </button>
+                      </div>
+                      
+                      <div className="space-y-3 max-w-xl">
+                        {agentState.trace && agentState.trace.length > 0 ? (
+                          agentState.trace.map((step, idx) => {
+                            const isHeader = step.includes('🧪') || step.includes('🧠');
+                            const isProblem = step.toLowerCase().includes('wrong') || 
+                                             step.toLowerCase().includes('incorrect') || 
+                                             step.toLowerCase().includes('fail') ||
+                                             step.toLowerCase().includes('error') ||
+                                             step.toLowerCase().includes('blocked');
+                            const isStateChange = step.includes('→');
+
+                            if (isHeader) {
+                              return (
+                                <div key={idx} className="pt-4 pb-2">
+                                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 border-b border-white/5 pb-2">
+                                    {step}
+                                  </h4>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <div key={idx} className={`flex gap-4 p-3 rounded-xl border transition-all animate-fade-up ${
+                                isProblem ? 'bg-red-500/5 border-red-500/20' : 'bg-white/[0.02] border-white/5 hover:border-white/10'
+                              }`} style={{ animationDelay: `${idx * 50}ms` }}>
+                                <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 text-[10px] font-black border ${
+                                  isProblem ? 'bg-red-500/20 border-red-500/40 text-red-400' : 'bg-vscode-accent/10 border-vscode-accent/20 text-vscode-accent'
+                                }`}>
+                                  {idx}
+                                </div>
+                                <div className="flex-1 pt-0.5">
+                                  <p className={`text-[11px] font-medium leading-relaxed ${isProblem ? 'text-red-400' : 'text-gray-300'}`}>
+                                    {isStateChange ? (
+                                      <>
+                                        <span className="opacity-50">{step.split('→')[0]}</span>
+                                        <span className="text-cyan-400 font-bold mx-2">→</span>
+                                        <span className="text-green-400 font-mono bg-green-400/5 px-1.5 py-0.5 rounded border border-green-500/10">
+                                          {step.split('→')[1]}
+                                        </span>
+                                      </>
+                                    ) : step}
+                                  </p>
+                                </div>
+                                {isProblem && <AlertTriangle size={12} className="text-red-400 shrink-0 mt-1" />}
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <div className="py-12 text-center border border-dashed border-white/10 rounded-3xl">
+                            <Activity size={24} className="mx-auto mb-4 text-gray-700 opacity-20" />
+                            <p className="text-xs font-bold text-gray-600 uppercase tracking-widest">No trace available for this issue</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : null}
                   <div className="absolute top-3 right-6 z-10 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/60 border border-white/5 text-[9px] font-black uppercase tracking-widest text-gray-500">
                     <GitBranch size={10} className="text-cyan-400" />
                     Diff Preview

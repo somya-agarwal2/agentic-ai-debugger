@@ -140,7 +140,11 @@ function TreeNode({ node, depth, selectedFileId, expandedFolders, onToggle, onFi
 }
 
 // ── Main FileTree ──
-const FileTree = ({ files, setFiles, selectedFileId, setSelectedFileId, onLog, onRepoLoaded }) => {
+const FileTree = ({ files, setFiles, selectedFileId, setSelectedFileId, onLog, onRepoLoaded, onBeforeLoad, onDownloadProject, isDemoMode }) => {
+  const DEMO_FILES = [
+    { id: 'demo-1', name: 'sum.py', path: '/sum.py', content: 'def calculate_sum(a, b):\n    # Logical bug: using subtraction instead of addition\n    return a - b\n' },
+    { id: 'demo-2', name: 'index.html', path: '/index.html', content: '<h1>Hello World</h1>' }
+  ];
   const [repoInput, setRepoInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [repoError, setRepoError] = useState('');
@@ -178,21 +182,24 @@ const FileTree = ({ files, setFiles, selectedFileId, setSelectedFileId, onLog, o
     if (!repoInput) return;
     setIsLoading(true);
     setRepoError('');
+    if (onBeforeLoad) onBeforeLoad(); // Reset previous state
     if (onLog) onLog(`Cloning repository: ${repoInput}...`, 'loading');
     
     try {
-      if (window.isDemoMode) {
-        await new Promise(r => setTimeout(r, 2000));
-        if (onLog) onLog(`Successfully loaded 5 files.`, 'success');
-        setIsLoading(false);
-        return;
+      if (isDemoMode) {
+        await new Promise(r => setTimeout(r, 1000));
+        setFiles(DEMO_FILES);
+        onRepoLoaded?.(DEMO_FILES);
+        onLog?.(`Successfully loaded demo repository`, 'success');
+        if (DEMO_FILES.length > 0) setSelectedFileId(DEMO_FILES[0].id);
+      } else {
+        const res = await api.loadRepo(repoInput);
+        const filesLoaded = Array.isArray(res?.files) ? res.files : [];
+        setFiles(filesLoaded);
+        if (onRepoLoaded) onRepoLoaded(repoInput);
+        if (onLog) onLog(`Successfully loaded ${filesLoaded.length} files.`, 'success');
+        if (filesLoaded.length > 0) setSelectedFileId(filesLoaded[0].id);
       }
-      const res = await api.loadRepo(repoInput);
-      const filesLoaded = Array.isArray(res?.files) ? res.files : [];
-      setFiles(filesLoaded);
-      if (onRepoLoaded) onRepoLoaded(repoInput);
-      if (onLog) onLog(`Successfully loaded ${filesLoaded.length} files.`, 'success');
-      if (filesLoaded.length > 0) setSelectedFileId(filesLoaded[0].id);
     } catch (err) {
       const errorMsg = err.response?.data?.error || 'Failed to load repository';
       setRepoError(errorMsg);
@@ -204,15 +211,27 @@ const FileTree = ({ files, setFiles, selectedFileId, setSelectedFileId, onLog, o
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file && !isDemoMode) return;
+    
     setIsLoading(true);
-    if (onLog) onLog(`Uploading project: ${file.name}...`, 'loading');
+    if (onBeforeLoad) onBeforeLoad(); // Reset previous state
+    if (onLog) onLog(`Uploading project: ${file?.name || 'demo.zip'}...`, 'loading');
+    
     try {
-      const res = await api.uploadProject(file);
-      const filesUploaded = Array.isArray(res?.files) ? res.files : [];
-      setFiles(filesUploaded);
-      if (onLog) onLog(`Successfully uploaded ${filesUploaded.length} files.`, 'success');
-      if (filesUploaded.length > 0) setSelectedFileId(filesUploaded[0].id);
+      if (isDemoMode) {
+        await new Promise(r => setTimeout(r, 1000));
+        setFiles(DEMO_FILES);
+        onRepoLoaded?.(DEMO_FILES);
+        onLog?.(`Successfully uploaded demo project`, 'success');
+        if (DEMO_FILES.length > 0) setSelectedFileId(DEMO_FILES[0].id);
+      } else {
+        const res = await api.uploadProject(file);
+        const filesUploaded = Array.isArray(res?.files) ? res.files : [];
+        setFiles(filesUploaded);
+        if (onRepoLoaded) onRepoLoaded(''); // ZIP upload successful
+        if (onLog) onLog(`Successfully uploaded ${filesUploaded.length} files.`, 'success');
+        if (filesUploaded.length > 0) setSelectedFileId(filesUploaded[0].id);
+      }
     } catch (err) {
       const errorMsg = 'Failed to upload project';
       setRepoError(errorMsg);
@@ -279,11 +298,21 @@ const FileTree = ({ files, setFiles, selectedFileId, setSelectedFileId, onLog, o
           </button>
         </div>
 
-        <label className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-dashed border-white/10 text-gray-500 text-[10px] uppercase font-black tracking-widest cursor-pointer hover:border-vscode-accent/30 hover:text-gray-400 transition-all">
+        <label 
+          data-testid="upload-zip-btn"
+          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-dashed border-white/10 text-gray-500 text-[10px] uppercase font-black tracking-widest cursor-pointer hover:border-vscode-accent/30 hover:text-gray-400 transition-all">
           <Download size={14} />
           Upload ZIP Project
           <input type="file" accept=".zip" className="hidden" onChange={handleFileUpload} />
         </label>
+
+        <button 
+          onClick={onDownloadProject}
+          disabled={!files || files.length === 0}
+          className="flex items-center justify-center gap-2 w-full py-2.5 mt-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[10px] uppercase font-black tracking-widest cursor-pointer hover:bg-cyan-500/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed group">
+          <Download size={14} className="group-hover:animate-bounce" />
+          Download Fixed Project
+        </button>
         
         {repoError && (
           <div className="mt-2 flex items-start gap-1.5 px-1">
@@ -349,6 +378,7 @@ const FileTree = ({ files, setFiles, selectedFileId, setSelectedFileId, onLog, o
               : filteredFlat.map(node => (
                   <div
                     key={node.id}
+                    data-testid={`file-${node.name}`}
                     onClick={() => handleFileClick(node)}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer transition-all ${
                       selectedFileId === node.id ? 'text-white' : 'text-gray-400 hover:text-gray-200'

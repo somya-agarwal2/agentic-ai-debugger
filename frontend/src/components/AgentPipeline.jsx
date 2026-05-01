@@ -40,7 +40,7 @@ const AgentPipeline = ({ currentStepId, status, explanation }) => {
             <div 
               key={step.id} 
               className={`flex items-center gap-4 transition-all duration-500 ${
-                isActive ? 'scale-105' : 'scale-100'
+                isActive ? 'scale-105 pipeline-card-active' : 'scale-100'
               } ${isPending ? 'opacity-30' : 'opacity-100'}`}
             >
               <div className={`relative flex items-center justify-center w-8 h-8 rounded-xl border transition-all duration-500 ${
