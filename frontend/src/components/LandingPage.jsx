@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bot, Zap, CheckCircle, GitPullRequest, ArrowRight, Play, Upload, Search, Wrench, ChevronRight, Send, MessageSquare, Lightbulb, Sparkles, User, Mail } from 'lucide-react';
+import { Bot, Zap, CheckCircle, GitPullRequest, ArrowRight, Play, Upload, Search, Wrench, ChevronRight } from 'lucide-react';
 import SmartTooltip from './SmartTooltip';
+import DocsModal from './DocsModal';
 
 function useInView(threshold = 0.15) {
   const ref = useRef(null);
@@ -478,121 +479,10 @@ function HeroDemoStrip() {
   );
 }
 
-// ── Feedback Form Component ──
-function FeedbackForm() {
-  const [form, setForm] = useState({ name: '', email: '', message: '' });
-  const [status, setStatus] = useState('idle'); // idle | sending | success
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!form.message) return;
-    setStatus('sending');
-    setTimeout(() => {
-      setStatus('success');
-      setForm({ name: '', email: '', message: '' });
-      setTimeout(() => setStatus('idle'), 3000);
-    }, 1500);
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="glass-panel p-8 rounded-[2.5rem] border border-white/5 space-y-5 bg-white/[0.01]">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-2">Name</label>
-          <div className="relative">
-            <User size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600" />
-            <input 
-              type="text" 
-              placeholder="John Doe"
-              value={form.name}
-              onChange={e => setForm({...form, name: e.target.value})}
-              className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all"
-            />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-2">Email</label>
-          <div className="relative">
-            <Mail size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600" />
-            <input 
-              type="email" 
-              placeholder="john@example.com"
-              value={form.email}
-              onChange={e => setForm({...form, email: e.target.value})}
-              className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all"
-            />
-          </div>
-        </div>
-      </div>
-      <div className="space-y-2">
-        <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-2">Message</label>
-        <textarea 
-          placeholder="How can we help?"
-          value={form.message}
-          onChange={e => setForm({...form, message: e.target.value})}
-          className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-4 text-sm min-h-[120px] focus:outline-none focus:border-blue-500/50 transition-all resize-none"
-        />
-      </div>
-      <button 
-        type="submit" 
-        disabled={status !== 'idle'}
-        className="w-full py-4 rounded-2xl bg-blue-600 text-white font-black uppercase tracking-widest text-xs hover:bg-blue-500 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50"
-      >
-        {status === 'sending' ? 'Sending Message...' : status === 'success' ? 'Message Sent! ✨' : <><Send size={14} /> Send Message</>}
-      </button>
-    </form>
-  );
-}
-
-// ── Improvement Suggestions Component ──
-function ImprovementSuggestions() {
-  const [suggestion, setSuggestion] = useState('');
-  const [status, setStatus] = useState('idle');
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!suggestion) return;
-    setStatus('submitting');
-    setTimeout(() => {
-      setStatus('done');
-      setSuggestion('');
-      setTimeout(() => setStatus('idle'), 3000);
-    }, 1200);
-  };
-
-  return (
-    <div className="glass-panel p-8 rounded-[2.5rem] border border-white/5 bg-white/[0.01] space-y-6">
-      <div className="flex items-center gap-4 p-4 rounded-2xl bg-purple-500/5 border border-purple-500/10">
-        <Sparkles size={20} className="text-purple-400 shrink-0" />
-        <p className="text-xs text-purple-300 font-medium">Shape the future of AgentSmiths by suggesting features or language support.</p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-2">Your Suggestion</label>
-          <textarea 
-            placeholder="e.g. Add support for Rust or better PR summaries..."
-            value={suggestion}
-            onChange={e => setSuggestion(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-4 text-sm min-h-[100px] focus:outline-none focus:border-purple-500/50 transition-all resize-none"
-          />
-        </div>
-        <button 
-          type="submit" 
-          disabled={status !== 'idle'}
-          className="w-full py-4 rounded-2xl bg-white/5 border border-purple-500/30 text-purple-400 font-black uppercase tracking-widest text-xs hover:bg-purple-500/10 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50"
-        >
-          {status === 'submitting' ? 'Submitting Idea...' : status === 'done' ? 'Idea Received! 🚀' : <><Lightbulb size={14} /> Submit Suggestion</>}
-        </button>
-      </form>
-    </div>
-  );
-}
-
 // ── Agent Timeline ──
 const TIMELINE = [
   { icon: '🔍', label: 'Scanning', desc: 'Continuously monitors file changes in real time' },
-  { icon: '🧠', label: 'Analyzing', desc: 'Gemini AI detects logical errors and intent mismatches' },
+  { icon: '🧠', label: 'Analyzing', desc: 'OpenAI GPT-4o detects logical errors and intent mismatches' },
   { icon: '🔧', label: 'Fixing', desc: 'Generates and applies deterministic code patches' },
   { icon: '✅', label: 'Testing', desc: 'Runs automated test suite with retry logic' },
   { icon: '🚀', label: 'PR Created', desc: 'Opens pull request with full diff and explanation' },
@@ -641,9 +531,10 @@ const LandingPage = ({ onEnter, onDemo, onChallenge }) => {
   const [howRef, howInView] = useInView(0.1);
   const [featRef, featInView] = useInView(0.1);
   const [ctaRef, ctaInView] = useInView(0.2);
+  const [isDocsOpen, setIsDocsOpen] = useState(false);
 
   const FEATURES = [
-    { icon: <Zap size={22} />, color: 'blue',   title: 'AI Debugging',     desc: 'Deep logical analysis by Gemini to catch intent mismatches and syntax errors.' },
+    { icon: <Zap size={22} />, color: 'blue',   title: 'AI Debugging',     desc: 'Deep logical analysis by GPT-4o to catch intent mismatches and syntax errors.' },
     { icon: <Bot size={22} />, color: 'purple', title: 'Auto Fix',         desc: 'Deterministic, context-aware code patches generated instantly.' },
     { icon: <CheckCircle size={22} />, color: 'orange', title: 'Test Validation', desc: 'Retry logic — if the fix fails tests, the agent learns and retries.' },
     { icon: <GitPullRequest size={22} />, color: 'green', title: 'PR Simulation', desc: 'Packages tested patches into clean pull requests automatically.' },
@@ -664,7 +555,7 @@ const LandingPage = ({ onEnter, onDemo, onChallenge }) => {
         style={{ background: 'rgba(5,11,24,0.7)', backdropFilter: 'blur(16px)' }}>
         <div className="flex items-center font-black text-xl tracking-tighter">
           <Bot className="text-cyan-400 mr-2.5" size={24} />
-          AgentSmiths
+          DevAgent
         </div>
         <div className="hidden lg:flex items-center gap-8">
           <a href="#how-it-works" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Features</a>
@@ -684,7 +575,12 @@ const LandingPage = ({ onEnter, onDemo, onChallenge }) => {
               </span>
             </button>
           </SmartTooltip>
-          <a href="#hero" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Docs</a>
+          <button 
+            onClick={() => setIsDocsOpen(true)}
+            className="text-sm font-medium text-gray-400 hover:text-white transition-colors cursor-pointer"
+          >
+            Docs
+          </button>
           <a href="#roadmap" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Roadmap</a>
           <a href="#contact" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Contact</a>
         </div>
@@ -761,7 +657,7 @@ const LandingPage = ({ onEnter, onDemo, onChallenge }) => {
           <div className="grid md:grid-cols-3 gap-8">
             {[
               { icon: <Upload size={28} />, step: '01', title: 'Load Code', desc: 'Sync your GitHub repository or paste code directly into the workspace.' },
-              { icon: <Search size={28} />, step: '02', title: 'AI Analysis', desc: 'Agent performs deep structural and logical audit using Gemini 1.5 Pro.' },
+              { icon: <Search size={28} />, step: '02', title: 'AI Analysis', desc: 'Agent performs deep structural and logical audit using OpenAI GPT-4o.' },
               { icon: <Wrench size={28} />, step: '03', title: 'Auto Patch', desc: 'Fixes are validated through test suites and packaged into PRs.' },
             ]?.map((card, i) => (
               <div key={i}
@@ -824,7 +720,7 @@ const LandingPage = ({ onEnter, onDemo, onChallenge }) => {
           <div className="grid md:grid-cols-4 gap-8 relative">
             <div className="absolute top-1/2 left-0 right-0 h-px bg-white/5 hidden md:block" />
             {[
-              { phase: 'Q1 2024', title: 'Agent Core', status: 'Completed', desc: 'Core reasoning engine and Gemini 1.5 integration.', active: false },
+              { phase: 'Q1 2024', title: 'Agent Core', status: 'Completed', desc: 'Core reasoning engine and GPT-4o integration.', active: false },
               { phase: 'Q2 2024', title: 'Multi-Language', status: 'In Progress', desc: 'Support for JS, Go, and Rust ecosystems.', active: true },
               { phase: 'Q3 2024', title: 'IDE Extensions', status: 'Planned', desc: 'Native VS Code and JetBrains extension suite.', active: false },
               { phase: 'Q4 2024', title: 'Self-Hosted', status: 'Planned', desc: 'Enterprise-grade local agent deployment.', active: false },
@@ -843,8 +739,6 @@ const LandingPage = ({ onEnter, onDemo, onChallenge }) => {
         </div>
       </section>
 
-
-
       {/* ── CONTACT ── */}
       <section id="contact" className="py-32 px-6 relative" style={{ background: '#0b0f17' }}>
         <div className="max-w-4xl mx-auto glass-panel rounded-[3rem] p-12 md:p-20 text-center relative overflow-hidden">
@@ -859,7 +753,7 @@ const LandingPage = ({ onEnter, onDemo, onChallenge }) => {
             <div className="flex flex-wrap justify-center gap-6">
               <a href="mailto:support@devagent.ai" className="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 hover:border-cyan-500/50 hover:bg-white/10 transition-all group flex items-center gap-3">
                 <Bot size={20} className="text-cyan-400 group-hover:scale-110 transition-transform" />
-                <span className="font-bold text-sm">support@agentsmiths.ai</span>
+                <span className="font-bold text-sm">support@devagent.ai</span>
               </a>
               <div className="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 hover:border-purple-500/50 hover:bg-white/10 transition-all group flex items-center gap-3 cursor-pointer">
                 <GitPullRequest size={20} className="text-purple-400 group-hover:scale-110 transition-transform" />
@@ -870,50 +764,82 @@ const LandingPage = ({ onEnter, onDemo, onChallenge }) => {
         </div>
       </section>
 
-
-
-      {/* ── FEEDBACK & IMPROVEMENTS ── */}
-      <section id="community" className="py-32 px-6 relative overflow-hidden" style={{ background: '#050B18' }}>
-        <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16">
+      {/* ── DOCS ── */}
+      <section id="docs" className="py-32 px-6 relative" style={{ background: '#050B18' }}>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-20">
+            <p className="text-[10px] uppercase tracking-[0.4em] text-cyan-400 font-black mb-4">Documentation</p>
+            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">Getting Started</h2>
+          </div>
           
-          {/* Feedback & Queries */}
-          <div className="space-y-10">
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-black uppercase tracking-widest text-blue-400">
-                <MessageSquare size={12} /> Support & Queries
+          <div className="grid md:grid-cols-2 gap-12">
+            <div className="space-y-8">
+              <div className="glass-panel p-8 rounded-3xl border border-white/5 space-y-4">
+                <h3 className="text-xl font-bold flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">01</span>
+                  Setup Workspace
+                </h3>
+                <p className="text-sm text-gray-400 leading-relaxed">Click "Open Workspace" to enter the IDE. You can sync your GitHub account or start a local session immediately.</p>
               </div>
-              <h2 className="text-4xl font-black text-white tracking-tight">Have a question?</h2>
-              <p className="text-gray-400 text-sm leading-relaxed max-w-md">Our team is always ready to help you optimize your agentic workflow. Send us a message and we'll get back to you shortly.</p>
-            </div>
-
-            <FeedbackForm />
-          </div>
-
-          {/* Improvement Suggestions */}
-          <div className="space-y-10">
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] font-black uppercase tracking-widest text-purple-400">
-                <Lightbulb size={12} /> Roadmap Contribution
+              <div className="glass-panel p-8 rounded-3xl border border-white/5 space-y-4">
+                <h3 className="text-xl font-bold flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs">02</span>
+                  Agent Configuration
+                </h3>
+                <p className="text-sm text-gray-400 leading-relaxed">Select your AI personality (Friendly, Strict, or Funny) and set the monitoring interval for your repository.</p>
               </div>
-              <h2 className="text-4xl font-black text-white tracking-tight">Improve AgentSmiths</h2>
-              <p className="text-gray-400 text-sm leading-relaxed max-w-md">We build for developers. If you have an idea for a new feature or a logic check, let us know and we'll add it to our roadmap.</p>
             </div>
-
-            <ImprovementSuggestions />
+            
+            <div className="space-y-8">
+              <div className="glass-panel p-8 rounded-3xl border border-white/5 space-y-4">
+                <h3 className="text-xl font-bold flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs">03</span>
+                  Bug Resolution
+                </h3>
+                <p className="text-sm text-gray-400 leading-relaxed">When the agent identifies a bug, review the "Reasoning" tab to understand the flaw before applying the patch.</p>
+              </div>
+              <div className="glass-panel p-8 rounded-3xl border border-white/5 space-y-4">
+                <h3 className="text-xl font-bold flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-lg bg-orange-500/20 text-orange-400 flex items-center justify-center text-xs">04</span>
+                  Deploy & PR
+                </h3>
+                <p className="text-sm text-gray-400 leading-relaxed">Once the fix passes internal tests, use the "Export to PR" button to push changes back to your GitHub repo.</p>
+              </div>
+            </div>
           </div>
+        </div>
+      </section>
 
+      {/* ── CTA ── */}
+      <section ref={ctaRef} className="py-40 px-6 relative overflow-hidden">
+        {/* Animated Background Glow */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] rounded-full opacity-20"
+             style={{ background: 'radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 60%)', filter: 'blur(100px)' }} />
+        </div>
+        
+        <div className={`max-w-3xl mx-auto text-center relative z-10 transition-all duration-1000 ${ctaInView ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+          <p className="text-[10px] uppercase tracking-[0.4em] text-cyan-400 font-black mb-6">Experience the Future</p>
+          <h2 className="text-5xl md:text-6xl font-black text-white mb-8 leading-[1.1] tracking-tighter">Automate your<br />debug workflow.</h2>
+          <p className="text-gray-400 text-lg mb-12 max-w-xl mx-auto leading-relaxed">Join elite teams using DevAgent to identify logical flaws in real-time. No configuration needed.</p>
+          <button onClick={onEnter} className="btn-primary inline-flex items-center gap-4 px-12 py-5 rounded-full font-black text-xl text-white">
+            Enter Workspace <ArrowRight size={22} />
+          </button>
         </div>
       </section>
 
       <footer className="py-12 border-t border-white/[0.05] text-center" style={{ background: '#050B18' }}>
         <div className="flex items-center justify-center gap-2 mb-4 opacity-50">
            <Bot size={18} className="text-cyan-400" />
-           <span className="font-bold text-sm tracking-tighter text-white uppercase">AgentSmiths</span>
+           <span className="font-bold text-sm tracking-tighter text-white">DevAgent</span>
         </div>
         <div className="text-[11px] text-gray-500 font-medium tracking-wide">
-          Built with precision by AgentSmiths &bull; Matrix Protocol v2.0
+          Powered by OpenAI GPT-4o &bull; &copy; 2024 Autonomous AI Debugger
         </div>
       </footer>
+      
+      {/* Docs Modal Overlay */}
+      <DocsModal isOpen={isDocsOpen} onClose={() => setIsDocsOpen(false)} />
     </div>
   );
 };

@@ -137,7 +137,8 @@ function App() {
     selectedIssueId: agentState?.id,
     prUrl,
     repositoryIssues,
-    isAnalyzingRepo
+    isAnalyzingRepo,
+    showPRWorkflow
   });
 
   const addLog = (message, type = 'info') => {
@@ -916,7 +917,7 @@ function App() {
               {demoError ? (
                 <span className="text-red-400 animate-pulse">⚠️ {demoError}</span>
               ) : (
-                "🎯 Guided Demo — Follow the cursor to experience the agentic workflow"
+                "🚀 Autonomous Intelligence — Witnessing the Agentic Reasoning Loop in real-time"
               )}
             </span>
           </div>

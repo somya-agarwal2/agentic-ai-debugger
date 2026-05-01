@@ -31,7 +31,7 @@ export const useDemoController = (isDemoMode, activeStates) => {
   const {
     isAgentMode, isAgentThinking, isAnalyzingRepo,
     agentState, files, screen, sidebarTab,
-    repositoryIssues, fixApplied, user
+    repositoryIssues, fixApplied, user, showPRWorkflow
   } = activeStates;
 
   // ── Helpers ──────────────────────────────────────────────────────────────
@@ -173,7 +173,19 @@ export const useDemoController = (isDemoMode, activeStates) => {
     }
 
     else if (currentStep === DEMO_STEPS.REPO2_SELECT_ISSUE && agentState) {
-      transitionTo(DEMO_STEPS.DONE, 4000);
+      waitForElement('#create-pr-btn', () => transitionTo(DEMO_STEPS.REPO2_OPEN_PR, 1500));
+    }
+    
+    else if (currentStep === DEMO_STEPS.REPO2_OPEN_PR) {
+      const publishBtn = document.querySelector('#publish-pr-btn');
+      if (publishBtn || showPRWorkflow) {
+        transitionTo(DEMO_STEPS.REPO2_PUBLISH_PR, 500);
+      }
+    }
+    
+    else if (currentStep === DEMO_STEPS.REPO2_PUBLISH_PR && !showPRWorkflow) {
+      // Once modal is closed (PR created), we are DONE
+      transitionTo(DEMO_STEPS.DONE, 1500);
     }
 
     // ── General auto-click (Phase 1 steps only) ────────────────────────────
