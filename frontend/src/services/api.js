@@ -1,8 +1,10 @@
 import axios from 'axios';
 
-const API = 'http://localhost:5000';
+// In production (Docker), nginx proxies /api/* → backend:5000
+// In dev, backend runs on localhost:5000 directly
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 axios.defaults.withCredentials = true;
-axios.defaults.timeout = 300000; // 300 seconds for slow Ollama responses
+axios.defaults.timeout = 120000; // 120 seconds
 
 export const api = {
   checkAuth: async () => {

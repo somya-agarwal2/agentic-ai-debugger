@@ -1,52 +1,66 @@
+import os
 import requests
 import json
 import re
 
-OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
-OLLAMA_MODEL = "phi3"
+GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_MODEL = "llama-3.3-70b-versatile"
 
-def call_ollama(prompt, retry_count=1):
+def call_grok(prompt, retry_count=1):
     """
-    Core function to communicate with Ollama API.
-    Handles retries and provides detailed logging.
+    Communicates with Groq API (OpenAI-compatible).
+    Uses llama3-70b-8192 for fast, high-quality inference.
     """
-    print(f"\n--- OLLAMA REQUEST [Retry: {1 - retry_count}] ---")
-    print(f"URL: {OLLAMA_URL}")
-    print(f"Model: {OLLAMA_MODEL}")
+    api_key = os.getenv("GROK_API_KEY")
+    if not api_key:
+        return "Error: GROK_API_KEY not found in environment."
+
+    print(f"\n--- GROQ REQUEST [Retry: {1 - retry_count}] ---")
+    
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
     
     payload = {
-        "model": OLLAMA_MODEL,
-        "prompt": prompt,
-        "stream": False
+        "model": GROQ_MODEL,
+        "messages": [
+            {"role": "system", "content": "You are an expert autonomous AI debugger. Respond ONLY in valid JSON format as requested."},
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0
     }
 
     try:
-        response = requests.post(OLLAMA_URL, json=payload, timeout=90)
+        response = requests.post(GROQ_API_URL, headers=headers, json=payload, timeout=90)
         print(f"Status Code: {response.status_code}", flush=True)
         response.raise_for_status()
         
-        try:
-            data = response.json()
-            output = data.get("response", "")
-            if not output:
-                print("Warning: Ollama returned empty response field.")
-            return output
-        except json.JSONDecodeError:
-            print("Error: Failed to parse JSON response from Ollama.")
-            return "Error: Invalid JSON from Ollama."
+        data = response.json()
+        output = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+        
+        if not output:
+            print("Warning: Groq returned empty content.")
+        return output
 
+    except requests.exceptions.HTTPError as e:
+        body = ""
+        try: body = e.response.json()
+        except: body = e.response.text
+        print(f"GROQ HTTP ERROR {e.response.status_code}: {body}", flush=True)
+        return f"Error: Groq API returned {e.response.status_code}. Details: {body}"
     except requests.exceptions.Timeout as e:
-        print(f"OLLAMA TIMEOUT ERROR: {str(e)}", flush=True)
-        return "Error: Ollama request timed out. The model is responding too slowly."
+        print(f"GROQ TIMEOUT ERROR: {str(e)}", flush=True)
+        return "Error: Groq request timed out."
     except requests.exceptions.ConnectionError as e:
-        print(f"OLLAMA CONNECTION ERROR: {str(e)}", flush=True)
+        print(f"GROQ CONNECTION ERROR: {str(e)}", flush=True)
         if retry_count > 0:
-            print("Retrying Ollama request (Connection Error)...", flush=True)
-            return call_ollama(prompt, retry_count - 1)
-        return f"Error: Unable to connect to Ollama. Is it running at {OLLAMA_URL}?"
+            print("Retrying Groq request...", flush=True)
+            return call_grok(prompt, retry_count - 1)
+        return f"Error: Unable to connect to Groq API."
     except Exception as e:
-        print(f"OLLAMA UNKNOWN ERROR: {str(e)}")
-        return f"Ollama Error: {str(e)}"
+        print(f"GROQ UNKNOWN ERROR: {str(e)}")
+        return f"Groq Error: {str(e)}"
 
 def extract_code_from_ai(raw, original_code=""):
     """

@@ -17,7 +17,13 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev_secret_key")
-CORS(app, supports_credentials=True)
+CORS(app, supports_credentials=True, origins=[
+    "http://localhost",
+    "http://localhost:80",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    os.getenv("FRONTEND_URL", "http://localhost")
+])
 
 GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
 GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
@@ -411,5 +417,6 @@ def agent_run_endpoint():
     return jsonify(result), 200
 
 if __name__ == '__main__':
+    debug_mode = os.getenv('FLASK_ENV', 'production') != 'production'
     print("--- STARTING AGENTIC WORKSPACE BACKEND (PORT 5000) ---")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=debug_mode, host='0.0.0.0', port=5000)

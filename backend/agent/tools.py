@@ -1,5 +1,5 @@
 import ast
-from services.llm_service import call_ollama, extract_code_from_ai
+from services.llm_service import call_grok, extract_code_from_ai
 from services.prompt_service import load_prompts
 from utils.logger import logger
 
@@ -57,7 +57,7 @@ def analyze_code(code):
         prompts = load_prompts()
         prompt = prompts["analyze_prompt"].format(syntax_context=syntax_context, code=code)
         
-        raw = call_ollama(prompt)
+        raw = call_grok(prompt)
         fix_val, exp_val, trace_val, severity, category = extract_code_from_ai(raw, code)
         
         has_issue = fix_val.strip() != code.strip()
@@ -95,7 +95,7 @@ def analyze_code(code):
         if (category == "Syntax" or category == "Runtime") and fix_val.strip() == code.strip():
             logger.info("[QUICK FIX PROMPT USED]")
             quick_prompt = f"Fix the Python {category} error in this code:\n{code}\nReturn ONLY the complete fixed code."
-            quick_fix = call_ollama(quick_prompt, retry_count=0)
+            quick_fix = call_grok(quick_prompt, retry_count=0)
             if quick_fix and not quick_fix.startswith("Error:"):
                 if "```" in quick_fix:
                     quick_fix = quick_fix.split("```")[1].split("```")[0].strip()
@@ -128,7 +128,7 @@ def generate_fix(code, error_details=""):
     prompts = load_prompts()
     prompt = prompts["fix_prompt"].format(error_details=error_details, code=code)
     
-    raw = call_ollama(prompt)
+    raw = call_grok(prompt)
     fix_val, exp_val, _ = extract_code_from_ai(raw, code)
     return {"fixed_code": fix_val, "explanation": exp_val}
 

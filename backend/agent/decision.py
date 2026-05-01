@@ -2,7 +2,7 @@ import json
 from typing import Optional
 from .state import AgentIssue, AgentState
 from services.prompt_service import load_prompts
-from services.llm_service import call_ollama
+from services.llm_service import call_grok
 
 class DecisionMaker:
     def __init__(self, state: AgentState):
@@ -27,7 +27,7 @@ class DecisionMaker:
         ]
         
         prompt = base_prompt.format(issues_list=json.dumps(issues_info, indent=2))
-        raw_response = call_ollama(prompt)
+        raw_response = call_grok(prompt)
         
         selected_index = 0
         try:

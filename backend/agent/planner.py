@@ -4,7 +4,7 @@ from typing import List
 from .state import AgentIssue, AgentState
 from agent.tools import analyze_code
 from services.prompt_service import load_prompts
-from services.llm_service import call_ollama
+from services.llm_service import call_grok
 
 class Planner:
     def __init__(self, state: AgentState):
@@ -26,7 +26,7 @@ class Planner:
         file_list = [i.file_path for i in issues]
         prompt = base_prompt.format(repo_path=self.state.repo_path, file_list=file_list)
         
-        raw_response = call_ollama(prompt)
+        raw_response = call_grok(prompt)
         
         try:
             # Try to extract JSON plan
