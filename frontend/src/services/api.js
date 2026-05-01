@@ -2,6 +2,7 @@ import axios from 'axios';
 
 const API = 'http://localhost:5000';
 axios.defaults.withCredentials = true;
+axios.defaults.timeout = 300000; // 300 seconds for slow Ollama responses
 
 export const api = {
   checkAuth: async () => {
@@ -52,6 +53,18 @@ export const api = {
   },
   createPR: async (repo_url, file_path, new_code) => {
     const res = await axios.post(`${API}/github/create-pr`, { repo_url, file_path, new_code });
+    return res.data;
+  },
+  analyzeRepo: async () => {
+    const res = await axios.post(`${API}/analyze-repo`);
+    return res.data;
+  },
+  getPrompts: async () => {
+    const res = await axios.get(`${API}/prompts`);
+    return res.data;
+  },
+  updatePrompts: async (prompts) => {
+    const res = await axios.post(`${API}/prompts`, prompts);
     return res.data;
   }
 };

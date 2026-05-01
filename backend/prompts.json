@@ -1,0 +1,6 @@
+{
+  "analyze_prompt": "Task: Fix Python bugs or syntax errors.\nContext: {syntax_context}\nCode:\n{code}\n\nReturn JSON only:\n{{\n  \"error\": \"description\",\n  \"explanation\": \"reasoning\",\n  \"severity\": \"High/Medium/Low\",\n  \"category\": \"Syntax/Logic/Performance\",\n  \"fixed_code\": \"complete code\"\n}}",
+  "decision_prompt": "You are an AI Debugging Decision Maker. You have detected the following issues:\n{issues_list}\n\nTask: Decide which issue should be fixed first based on severity and impact.\nReturn ONLY the index of the issue to fix (starting from 0) in a JSON object.\nExample: {{\n  \"selected_index\": 0, \"reasoning\": \"Syntax errors in main.py take priority.\"\n}}",
+  "fix_prompt": "You are a Python code fixer. Your job is to fix the provided code.\nBug description: {error_details}\nReturn ONLY a JSON object \u2014 no markdown, no extra text.\nJSON FORMAT:\n{{\n  \"explanation\": \"what was wrong and what was changed\",\n  \"fixed_code\": \"the complete corrected Python code\"\n}}\nRULES:\n- 'fixed_code' must contain the FULL corrected code, never empty\n- Output ONLY JSON\nCODE TO FIX:\n{code}",
+  "planner_prompt": "Task: Create a debugging plan for repo: {repo_path}.\nFiles: {file_list}\nReturn JSON with a 'plan' list of steps."
+}

@@ -8,6 +8,7 @@ import requests
 from flask import Flask, request, jsonify, session, redirect
 from flask_cors import CORS
 from dotenv import load_dotenv
+from concurrent.futures import ThreadPoolExecutor
 from tools import analyze_code, generate_fix, run_tests, validate_code_input
 from agent import run_agent_loop
 
@@ -84,7 +85,20 @@ def github_logout():
     return jsonify({"success": True}), 200
 
 
-# Persistent storage for the current project context
+@app.route('/prompts', methods=['GET'])
+def get_prompts():
+    from tools import load_prompts
+    return jsonify(load_prompts()), 200
+
+@app.route('/prompts', methods=['POST'])
+def update_prompts():
+    from tools import save_prompts
+    try:
+        data = request.get_json()
+        save_prompts(data)
+        return jsonify({"success": True}), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 400
 current_project = {
     "files": [],
     "path": None,
@@ -134,6 +148,7 @@ def upload_project():
     files = get_file_structure(extract_dir)
     current_project["files"] = files
     current_project["path"] = extract_dir
+    current_project["issues_list"] = []
     
     return jsonify({"files": files}), 200
 
@@ -152,6 +167,7 @@ def load_repo():
         files = get_file_structure(extract_dir)
         current_project["files"] = files
         current_project["path"] = extract_dir
+        current_project["issues_list"] = []
         return jsonify({"files": files}), 200
     except Exception as e:
         return jsonify({"error": f"Failed to clone repo: {str(e)}"}), 500
@@ -307,46 +323,83 @@ def run_tests_endpoint():
 
 @app.route('/analyze-repo', methods=['POST'])
 def analyze_repo_endpoint():
+    """
+    Scans the entire repository and returns a list of detected issues.
+    """
     print("\n--- STARTING FULL REPO ANALYSIS ---")
     files = current_project.get("files", [])
     if not files:
+        print("ERROR: No files found in current_project")
         return jsonify({"error": "No project loaded"}), 400
     
-    current_project["issues_list"] = []
+    all_issues = []
+    had_success = False
+    VALID_EXTENSIONS = (".py", ".js", ".ts", ".jsx", ".tsx")
     
-    for file in files:
-        file_name = file.get("name", "unknown")
-        # Only analyze code files
-        if not (file_name.endswith('.py') or file_name.endswith('.js') or file_name.endswith('.ts')):
-            continue
+    print(f"Found {len(files)} total files in project structure.")
+    
+    had_success = False
+    all_issues = []
+    
+    def process_file(file_item):
+        nonlocal had_success
+        file_name = file_item.get("name", "unknown")
+        if not file_name.lower().endswith(VALID_EXTENSIONS):
+            return None
             
-        print(f"Analyzing file: {file_name}")
+        print(f"Processing file: {file_name}")
         try:
-            code = file.get("content", "")
+            code = file_item.get("content", "")
+            if not code or len(code.strip()) < 10:
+                return None
+
             result = analyze_code(code)
-            
-            issue_item = {
-                "file": file_name,
-                "issue": result.get("issue", False),
-                "explanation": result.get("explanation", ""),
-                "fix": result.get("fixed_code") or result.get("fix"),
-                "original_code": code
-            }
-            
-            current_project["issues_list"].append(issue_item)
-            
-            if issue_item["issue"]:
-                print(f"Issue found in: {file_name}")
-            else:
-                print(f"No issue in: {file_name}")
-                
+            if isinstance(result, dict):
+                had_success = True
+                if result.get("has_issue"):
+                    print(f"!!! ISSUE DETECTED in {file_name}")
+                    return {
+                        "file": file_name,
+                        "issue": result.get("issue") or "Logical Anomaly",
+                        "fix": result.get("fixed_code") or result.get("fix"),
+                        "explanation": result.get("explanation", ""),
+                        "severity": result.get("severity", "Medium"),
+                        "category": result.get("category", "Logic"),
+                        "priority_reason": result.get("priority_reason", ""),
+                        "original_code": code,
+                        "trace": result.get("trace", [])
+                    }
+                else:
+                    print(f"Clean: {file_name}")
         except Exception as e:
             print(f"Error analyzing {file_name}: {str(e)}")
-            continue
-            
+        return None
+
+    # Use ThreadPoolExecutor for parallel analysis
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        results = list(executor.map(process_file, files))
+        all_issues = [r for r in results if r is not None]
+    
+    # Sort issues by severity: High > Medium > Low
+    severity_order = {"High": 0, "Medium": 1, "Low": 2}
+    all_issues.sort(key=lambda x: severity_order.get(x.get("severity", "Medium"), 1))
+    
+    # Only add a system error if NO files were successfully analyzed AND no issues found
+    if not had_success and len(all_issues) == 0:
+        all_issues.append({
+            "id": "system_error",
+            "file": "system",
+            "type": "System Error",
+            "issue": "Analysis failed completely",
+            "explanation": "The AI engine was unable to process any files in this repository."
+        })
+    
+    current_project["issues_list"] = all_issues
+    print(f"--- REPO ANALYSIS COMPLETE: FOUND {len(all_issues)} ISSUES ---\n")
+    
+    # STEP 7: Return Final Response
     return jsonify({
-        "issues_list": current_project["issues_list"],
-        "selected_issue": current_project["issues_list"][0] if current_project["issues_list"] else None
+        "issues_list": all_issues
     }), 200
 
 @app.route('/agent-run', methods=['POST'])
