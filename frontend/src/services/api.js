@@ -1,0 +1,57 @@
+import axios from 'axios';
+
+const API = 'http://localhost:5000';
+axios.defaults.withCredentials = true;
+
+export const api = {
+  checkAuth: async () => {
+    const res = await axios.get(`${API}/auth/github/check`);
+    return res.data;
+  },
+  logout: async () => {
+    const res = await axios.get(`${API}/auth/github/logout`);
+    return res.data;
+  },
+  runTests: async (code) => {
+    console.log("Sending request...");
+    try {
+      const res = await axios.post(`${API}/run-tests`, { code });
+      console.log("Response:", res.data);
+      return res.data;
+    } catch (error) {
+      console.error("API Error (/run-tests):", error);
+      throw error;
+    }
+  },
+  runAgent: async (code, signal) => {
+    console.log("Sending request...");
+    try {
+      const res = await axios.post(`${API}/agent-run`, { code }, { signal });
+      console.log("Response:", res.data);
+      return res.data;
+    } catch (error) {
+      if (axios.isCancel(error)) {
+        console.log("Request canceled by user");
+        throw new Error("Canceled");
+      }
+      console.error("API Error (/agent-run):", error);
+      throw error;
+    }
+  },
+  uploadProject: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await axios.post(`${API}/upload-project`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return res.data;
+  },
+  loadRepo: async (url) => {
+    const res = await axios.post(`${API}/load-repo`, { url });
+    return res.data;
+  },
+  createPR: async (repo_url, file_path, new_code) => {
+    const res = await axios.post(`${API}/github/create-pr`, { repo_url, file_path, new_code });
+    return res.data;
+  }
+};
