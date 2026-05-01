@@ -188,10 +188,11 @@ const FileTree = ({ files, setFiles, selectedFileId, setSelectedFileId, onLog, o
         return;
       }
       const res = await api.loadRepo(repoInput);
-      setFiles(res.files);
+      const filesLoaded = Array.isArray(res?.files) ? res.files : [];
+      setFiles(filesLoaded);
       if (onRepoLoaded) onRepoLoaded(repoInput);
-      if (onLog) onLog(`Successfully loaded ${res.files.length} files.`, 'success');
-      if (res.files.length > 0) setSelectedFileId(res.files[0].id);
+      if (onLog) onLog(`Successfully loaded ${filesLoaded.length} files.`, 'success');
+      if (filesLoaded.length > 0) setSelectedFileId(filesLoaded[0].id);
     } catch (err) {
       const errorMsg = err.response?.data?.error || 'Failed to load repository';
       setRepoError(errorMsg);
@@ -208,9 +209,10 @@ const FileTree = ({ files, setFiles, selectedFileId, setSelectedFileId, onLog, o
     if (onLog) onLog(`Uploading project: ${file.name}...`, 'loading');
     try {
       const res = await api.uploadProject(file);
-      setFiles(res.files);
-      if (onLog) onLog(`Successfully uploaded ${res.files.length} files.`, 'success');
-      if (res.files.length > 0) setSelectedFileId(res.files[0].id);
+      const filesUploaded = Array.isArray(res?.files) ? res.files : [];
+      setFiles(filesUploaded);
+      if (onLog) onLog(`Successfully uploaded ${filesUploaded.length} files.`, 'success');
+      if (filesUploaded.length > 0) setSelectedFileId(filesUploaded[0].id);
     } catch (err) {
       const errorMsg = 'Failed to upload project';
       setRepoError(errorMsg);
@@ -254,7 +256,6 @@ const FileTree = ({ files, setFiles, selectedFileId, setSelectedFileId, onLog, o
               onFocus={() => {
                 if (window.isDemoMode) {
                   setRepoInput('github.com/demo/mathematics-suite');
-                  window.advanceDemo?.(8);
                 }
               }}
               onChange={e => setRepoInput(e.target.value)}
@@ -264,6 +265,7 @@ const FileTree = ({ files, setFiles, selectedFileId, setSelectedFileId, onLog, o
             />
           </div>
           <button
+            id="load-repo-btn"
             onClick={() => {
               loadRepo();
               if (window.isDemoMode) window.advanceDemo?.(10);

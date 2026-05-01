@@ -6,7 +6,7 @@ const CodeEditor = ({
   code = '', setCode, originalCode, suggestedCode = null, agentState = null,
   isAgentThinking, isAgentMode, setIsAgentMode,
   onRunTests, onRunAgent,
-  onFixApplied, onFixRejected, onCreatePR,
+  onFixApplied, onFixRejected, onCloseIssue, onCreatePR,
   activeFileName = 'main.py',
 }) => {
   const [hoveredBtn, setHoveredBtn] = useState(null);
@@ -247,7 +247,7 @@ const CodeEditor = ({
               style={{ background: 'rgba(8, 12, 20, 0.9)', backdropFilter: 'blur(12px)' }}>
               <div className="flex items-center justify-between px-4 py-2 border-b border-white/5 bg-white/5">
                 <div className="flex items-center gap-2">
-                  <Terminal size={12} className={agentState.testPassed ? 'text-green-400' : 'text-red-400'} />
+                  <Terminal size={12} className={agentState?.testPassed ? 'text-green-400' : 'text-red-400'} />
                   <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Execution Output</span>
                 </div>
                 <button onClick={() => setCode(code)} className="text-gray-500 hover:text-white transition-colors">
@@ -255,11 +255,11 @@ const CodeEditor = ({
                 </button>
               </div>
               <div className="p-4 font-mono text-[11px] max-h-32 overflow-y-auto">
-                <div className={agentState.testPassed ? 'text-green-400' : 'text-red-300'}>
-                  {agentState.testOutput}
+                <div className={agentState?.testPassed ? 'text-green-400' : 'text-red-300'}>
+                  {agentState?.testOutput || ""}
                 </div>
-                {agentState.result && (
-                  <div className={`mt-2 pt-2 border-t border-white/5 text-[10px] font-bold uppercase tracking-widest ${agentState.testPassed ? 'text-green-500' : 'text-red-500'}`}>
+                {agentState?.result && (
+                   <div className={`mt-2 pt-2 border-t border-white/5 text-[10px] font-bold uppercase tracking-widest ${agentState?.testPassed ? 'text-green-500' : 'text-red-500'}`}>
                     Status: {agentState.result}
                   </div>
                 )}
@@ -301,7 +301,7 @@ const CodeEditor = ({
                   <button 
                     id="apply-fix-btn"
                     onClick={onFixApplied}
-                    disabled={isAgentThinking}
+                    disabled={isAgentThinking || !suggestedCode}
                     className="px-5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-cyan-400 text-[10px] font-black uppercase tracking-widest hover:bg-cyan-500/10 hover:border-cyan-400/30 transition-all active:scale-95 disabled:opacity-40"
                   >
                     Apply Fix
@@ -315,30 +315,39 @@ const CodeEditor = ({
                     <GitPullRequest size={12} />
                     Create PR
                   </button>
+                  <button 
+                    onClick={onCloseIssue}
+                    className="p-1.5 hover:bg-white/10 rounded-lg text-gray-500 hover:text-white transition-colors"
+                    title="Close Issue View"
+                  >
+                    <X size={16} />
+                  </button>
                 </div>
               </div>
 
               <div className="flex-1 flex overflow-hidden">
                 <div className="w-1/3 min-w-[300px] border-r border-white/5 p-6 overflow-y-auto bg-black/20">
                   <div className="space-y-6">
-                    {agentState?.error && (
+                    {agentState?.error ? (
                       <div>
                         <div className="flex items-center gap-2 mb-3">
                           <AlertTriangle size={14} className="text-red-400" />
                           <h3 className="text-[10px] font-black uppercase tracking-widest text-red-400">Detected Issue</h3>
                         </div>
                         <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/10 text-xs font-bold text-gray-200">
-                          {agentState.error}
+                          {agentState.error || "Unknown Issue"}
                         </div>
                       </div>
-                    )}
-                    {agentState?.explanation && (
+                    ) : null}
+                    {agentState?.explanation ? (
                       <div>
                         <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-3 px-1">Explanation</h3>
                         <p className="text-[11px] text-gray-400 leading-relaxed px-1">
                           {agentState.explanation}
                         </p>
                       </div>
+                    ) : (
+                      <div className="text-[10px] text-gray-600 px-1">Select an issue for details</div>
                     )}
                   </div>
                 </div>
@@ -348,24 +357,32 @@ const CodeEditor = ({
                     <GitBranch size={10} className="text-cyan-400" />
                     Diff Preview
                   </div>
-                  <DiffEditor
-                    height="100%"
-                    original={code || ''}
-                    modified={suggestedCode || ''}
-                    language="python"
-                    theme="vs-dark"
-                    options={{
-                      readOnly: true,
-                      minimap: { enabled: false },
-                      scrollBeyondLastLine: false,
-                      fontSize: 12,
-                      fontFamily: "'JetBrains Mono', monospace",
-                      lineHeight: 22,
-                      renderSideBySide: true,
-                      padding: { top: 12, bottom: 12 },
-                      automaticLayout: true,
-                    }}
-                  />
+                  {agentState && suggestedCode ? (
+                    <DiffEditor
+                      height="100%"
+                      original={code || ''}
+                      modified={suggestedCode}
+                      language="python"
+                      theme="vs-dark"
+                      options={{
+                        readOnly: true,
+                        minimap: { enabled: false },
+                        scrollBeyondLastLine: false,
+                        fontSize: 12,
+                        fontFamily: "'JetBrains Mono', monospace",
+                        lineHeight: 22,
+                        renderSideBySide: true,
+                        padding: { top: 12, bottom: 12 },
+                        automaticLayout: true,
+                      }}
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-center p-6">
+                      <AlertTriangle size={24} className="mb-2 text-yellow-500/50" />
+                      <p className="text-xs font-bold uppercase tracking-widest text-yellow-500/80 mb-1">AI Generated Fix Ready for Review</p>
+                      <p className="text-[10px] text-gray-500 max-w-xs">The AI identified an issue. The corrected code is being processed — you may apply it above or review manually.</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

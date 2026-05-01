@@ -4,9 +4,14 @@ import CodeEditor from './components/CodeEditor';
 import AIAssistant from './components/AIAssistant';
 import LandingPage from './components/LandingPage';
 import LogsPanel from './components/LogsPanel';
-import GuidedCursor from './components/GuidedCursor';
+import CursorGuide from './components/demo/CursorGuide';
+import AgentPipeline from './components/AgentPipeline';
+import PRWorkflow from './components/PRWorkflow';
+import IssuesPanel from './components/IssuesPanel';
 import { api } from './services/api';
-import { Bot, X, AlertCircle, CheckCircle2, GitPullRequest, ExternalLink, Sparkles } from 'lucide-react';
+import { useDemoController } from './hooks/useDemoController';
+import { DEMO_STEPS } from './constants/demoSteps';
+import { Bot, X, AlertCircle, CheckCircle2, GitPullRequest, ExternalLink, Sparkles, ShieldCheck, Search, LayoutPanelLeft } from 'lucide-react';
 
 const DEFAULT_FILES = [
   { id: '1', name: 'main.py', path: '/main.py', content: 'def calculate_sum(a, b):\n    # There is a logical bug here\n    result = a - b \n    return result\n\nprint("Result:", calculate_sum(5, 3))\n' },
@@ -52,8 +57,10 @@ function App() {
   const [screen, setScreen] = useState('landing');
   const [isInitializing, setIsInitializing] = useState(false);
   const [serverError, setServerError] = useState(false);
-  const [isDemoMode, setIsDemoMode] = useState(true);
-  const [showPRModal, setShowPRModal] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(false); // DEFAULT TO FALSE
+  const [isGuidedDemoActive, setIsGuidedDemoActive] = useState(false);
+  const [showPRWorkflow, setShowPRWorkflow] = useState(false);
+  const [prUrl, setPrUrl] = useState(null);
 
   const [files, setFiles] = useState(DEFAULT_FILES);
   const [selectedFileId, setSelectedFileId] = useState('1');
@@ -70,8 +77,24 @@ function App() {
   const [user, setUser] = useState(null);
   const [logs, setLogs] = useState([]);
   const [currentRepoUrl, setCurrentRepoUrl] = useState('');
-  const [demoStep, setDemoStep] = useState(0);
   const [fixApplied, setFixApplied] = useState(false);
+  const [pipelineStep, setPipelineStep] = useState('scan');
+  const [pipelineExplanation, setPipelineExplanation] = useState('');
+  const [repositoryIssues, setRepositoryIssues] = useState([]);
+  const [isAnalyzingRepo, setIsAnalyzingRepo] = useState(false);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [sidebarTab, setSidebarTab] = useState('pipeline'); // 'pipeline' | 'issues'
+
+  const { currentStep, config: demoConfig, demoError, restart: restartDemoLogic } = useDemoController(isDemoMode, {
+    isAgentMode,
+    agentStatus,
+    agentState,
+    user,
+    currentRepoUrl,
+    fixApplied,
+    isAgentThinking,
+    screen
+  });
 
   const addLog = (message, type = 'info') => {
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -102,44 +125,10 @@ function App() {
     }
   };
 
-  // Demo Step Controller (State-Driven)
-  useEffect(() => {
-    if (!isDemoMode || screen !== 'workspace') return;
-
-    let nextStep = demoStep;
-
-    if (!isAgentMode) {
-      nextStep = 0; // Enable Agent Mode
-    } else if (isAgentThinking) {
-      nextStep = 2; // AI is thinking
-    } else if (agentStatus === 'Idle' || (agentStatus === 'Monitoring' && !agentState?.error)) {
-      nextStep = 1; // Run Loop / Analyze
-    } else if (agentState?.error && suggestedCode && !fixApplied) {
-      nextStep = 4; // Apply Fix
-    } else if (!user) {
-      nextStep = 5; // Login GitHub
-    } else if (!currentRepoUrl) {
-      nextStep = 7; // Paste Repo
-    } else if (fixApplied || agentState?.error === 'No issues found') {
-      nextStep = 11; // Create PR
-    }
-
-    if (nextStep !== demoStep) {
-      console.log("%c DEMO STATE SYNC ", "background: #22d3ee; color: #000; font-weight: bold", { 
-        step: nextStep,
-        isAgentMode, 
-        isAgentThinking, 
-        agentStatus, 
-        hasError: !!agentState?.error, 
-        hasUser: !!user, 
-        hasRepo: !!currentRepoUrl,
-        fixApplied
-      });
-      setDemoStep(nextStep);
-    }
-  }, [isDemoMode, screen, isAgentMode, isAgentThinking, agentStatus, agentState, user, currentRepoUrl, fixApplied, suggestedCode, demoStep]);
+  // Cleaned up old demoStep useEffect
 
   const restartDemo = () => {
+    restartDemoLogic();
     setIsAgentMode(false);
     setAgentStatus('Idle');
     setAgentState(null);
@@ -147,18 +136,39 @@ function App() {
     setFixApplied(false);
     setUser(null);
     setCurrentRepoUrl('');
+    setIsGuidedDemoActive(true);
     addLog("Demo restarted.", "info");
   };
+
+  const cleanAIResponse = (text) => {
+    if (!text) return '';
+    return text
+      .replace(/\\n/g, '\n') // Fix escaped newlines
+      .replace(/```[\s\S]*?```/g, '') // Remove markdown blocks
+      .trim();
+  };
+
+  // Auto-analyze when files change (new repo loaded)
+  useEffect(() => {
+    if (files && files.length > 3 && !isAnalyzingRepo) {
+      // Small delay to ensure UI stability
+      const timer = setTimeout(() => {
+        analyzeRepository();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [files]);
 
   // Load file content when selected
   useEffect(() => {
     const file = files.find(f => f.id === selectedFileId);
     if (file) {
       setCode(file.content);
-      setSuggestedCode(null);
-      setAgentState(null);
+      // [MULTI-FILE UPGRADE] Do not clear agent state here, clear it in loadFileContent instead
       setPrDetails(null);
-      setAgentStatus(isAgentMode ? 'Monitoring' : 'Idle');
+      if (!agentState) {
+        setAgentStatus(isAgentMode ? 'Monitoring' : 'Idle');
+      }
     }
   }, [selectedFileId, files]);
 
@@ -196,7 +206,14 @@ function App() {
         return;
       }
 
+      setPipelineStep('scan');
+      await new Promise(r => setTimeout(r, 1000));
+      setPipelineStep('analyze');
+      await new Promise(r => setTimeout(r, 1200));
+
       const res = await api.runAgent(fileContent, abortControllerRef.current.signal);
+      setPipelineStep('detect');
+      await new Promise(r => setTimeout(r, 800));
       if (!isAgentRunning.current) return;
 
       // Check if this specific issue was already rejected
@@ -211,28 +228,65 @@ function App() {
         return;
       }
       
-      setAgentState(res || null);
+      setPipelineStep('reason');
+      setPipelineExplanation(res.explanation?.split('.')[0] + '.' || "Found logic discrepancy.");
+      await new Promise(r => setTimeout(r, 1500));
+      
+      // [MULTI-FILE UPGRADE] Do not set agentState directly during analysis
+      // setAgentState(res || null); 
+      
+      setPipelineStep('generate');
+      await new Promise(r => setTimeout(r, 1000));
       if (isDemoMode && demoStep === 10) {
         advanceDemo(11);
       }
       
-      // STRICT SEPARATION: Only extract code, never raw JSON or metadata
-      let cleanCode = fileContent;
-      if (res && typeof res === 'object' && res.fixed_code) {
-        cleanCode = String(res.fixed_code).trim();
+      // Extract fixed_code — backend returns it as 'fixed_code' (or legacy 'fix')
+      let cleanCode = null;
+      if (res && typeof res === 'object') {
+        const rawFix = res?.fixed_code || res?.fix || null;
+        if (rawFix && typeof rawFix === 'string') {
+          cleanCode = cleanAIResponse(rawFix);
+        }
       } else if (typeof res === 'string') {
-        // Fallback for unexpected string responses
-        cleanCode = res.trim();
+        cleanCode = cleanAIResponse(res);
       }
       
-      setSuggestedCode(cleanCode);
+      // Duplicate detection
+      if (cleanCode && cleanCode.trim() === fileContent.trim()) {
+        addLog("AI returned identical code. No fix needed.", "info");
+        setAgentStatus('Monitoring');
+        setSuggestedCode(null);
+        setAgentState(null);
+        return;
+      }
       
-      if (res?.error && res.error !== 'No issues found') {
+      console.log("[DevAgent] AI Response:", res);
+      console.log("[DevAgent] Fixed Code before rendering:", cleanCode);
+      
+      // [MULTI-FILE UPGRADE] Add to repositoryIssues instead of auto-showing
+      if (res?.error && res.error !== 'No issues found' && cleanCode) {
+        const newIssue = {
+          id: `issue-${Date.now()}-${fileName}`,
+          fileId: fileId,
+          fileName: fileName,
+          error: res.error,
+          explanation: res.explanation || "",
+          fixed_code: cleanCode,
+          agentState: res
+        };
+        
+        setRepositoryIssues(prev => {
+          // Avoid duplicates for the same file
+          const filtered = prev.filter(iss => iss.fileId !== fileId);
+          return [...filtered, newIssue];
+        });
+        
         addLog(`Issue detected in ${fileName}: ${res.error}`, 'info');
-        setAgentStatus('Fix ready');
+        setAgentStatus('Monitoring');
       } else {
         addLog(`No issues found in ${fileName}.`, 'success');
-        setAgentStatus('Code is clean');
+        setAgentStatus('Monitoring');
       }
     } catch (e) {
       if (e.message === "Canceled") return;
@@ -250,6 +304,85 @@ function App() {
         isAgentRunning.current = false;
       }
     }
+  };
+
+  const analyzeRepository = async () => {
+    if (isAnalyzingRepo || !files || files.length === 0) return;
+    
+    setIsAnalyzingRepo(true);
+    setAnalysisProgress(0);
+    // Silent analysis — don't auto-switch tab unless requested
+    addLog("Starting background repository analysis...", "info");
+    setPipelineStep('scan');
+    setPipelineExplanation("Scanning all files silently...");
+
+    try {
+      if (isDemoMode) {
+        // Simulated background analysis
+        setRepositoryIssues([]);
+        let mockIssues = [];
+        for (let i = 0; i < Math.min(files.length, 5); i++) {
+          await new Promise(r => setTimeout(r, 600));
+          setAnalysisProgress(Math.round(((i + 1) / 5) * 100));
+          if (files[i].name === 'subtract.py') {
+            const issue = {
+              id: `issue-${Date.now()}`,
+              fileId: files[i].id,
+              fileName: files[i].name,
+              error: "Logical Anomaly: Operator Mismatch",
+              explanation: "The function is using '+' instead of '-'.",
+              fixed_code: files[i].content.replace('+', '-'),
+              agentState: {
+                error: "Operator Mismatch",
+                explanation: "The function is using '+' instead of '-'.",
+                fixed_code: files[i].content.replace('+', '-')
+              }
+            };
+            mockIssues.push(issue);
+            setRepositoryIssues([...mockIssues]);
+          }
+        }
+      } else {
+        const res = await api.analyzeRepo(); // Call the new backend endpoint
+        const list = Array.isArray(res?.issues_list) ? res.issues_list : [];
+        
+        if (list.length > 0) {
+          const formattedIssues = list.map(iss => ({
+            id: `issue-${Date.now()}-${iss.file}`,
+            fileId: files.find(f => f.name === iss.file)?.id,
+            fileName: iss.file || "Unknown",
+            error: iss.issue ? "Logical Bug Detected" : "No Issue",
+            explanation: iss.explanation || "",
+            fixed_code: iss.fix || null,
+            agentState: {
+              error: iss.issue ? "Logical Bug Detected" : "No Issue",
+              explanation: iss.explanation || "",
+              fixed_code: iss.fix || null
+            }
+          })).filter(iss => iss.fixed_code); // Only show actual issues
+          setRepositoryIssues(formattedIssues);
+        } else {
+          setRepositoryIssues([]);
+        }
+      }
+      addLog(`Background analysis complete. Found ${repositoryIssues.length} potential issues.`, 'success');
+    } catch (err) {
+      console.error("Repo analysis failed:", err);
+      addLog("Background analysis encountered an error.", "error");
+    } finally {
+      setIsAnalyzingRepo(false);
+      setPipelineStep('generate');
+      setPipelineExplanation("Idle");
+    }
+  };
+
+  const handleIssueClick = (issue) => {
+    if (!issue) return;
+    setSelectedFileId(issue.fileId);
+    setAgentState(issue.agentState || null);
+    setSuggestedCode(issue.fixed_code || null);
+    setAgentStatus('Fix ready');
+    setSidebarTab('pipeline'); // Switch back to see reasoning if needed, or stay
   };
 
   const runSimulatedAgentFlow = async () => {
@@ -281,29 +414,37 @@ function App() {
     };
 
     const issueId = `demo-3-3-Logical Anomaly: Incorrect Subtraction`;
-    if (rejectedIssues.includes(issueId)) {
-      setAgentState({ ...mockRes, isIgnored: true });
-      setSuggestedCode(null);
-      addLog("Issue ignored per user decision.", "info");
-      setAgentStatus('Monitoring');
-    } else {
-      setAgentState(mockRes);
-      setSuggestedCode(mockRes.fixed_code);
+    if (!rejectedIssues.includes(issueId)) {
+      const newIssue = {
+        id: `issue-demo-${Date.now()}`,
+        fileId: 'demo-3',
+        fileName: 'subtract.py',
+        error: mockRes.error,
+        explanation: mockRes.explanation,
+        fixed_code: mockRes.fixed_code,
+        agentState: mockRes
+      };
+      setRepositoryIssues(prev => {
+        const filtered = prev.filter(iss => iss.fileId !== 'demo-3');
+        return [...filtered, newIssue];
+      });
       addLog("AI Detection: Expected 'a - b', Found 'a + b'", "error");
-      addLog("Fix ready for review.", "success");
-      setAgentStatus('Fix ready');
+      addLog("New issue added to Issues tab.", "success");
     }
+    setAgentStatus('Monitoring');
     setIsAgentThinking(false);
   };
 
-  const handleCreatePR = async () => {
+  const handleCreatePR = () => {
+    // Show the PR preview/workflow panel first
+    setShowPRWorkflow(true);
+  };
+
+  const executePR = async () => {
     if (isDemoMode) {
-      addLog("Simulating Pull Request creation...", "loading");
-      setIsAgentThinking(true);
       await new Promise(r => setTimeout(r, 1800));
-      setIsAgentThinking(false);
-      setShowPRModal(true);
       addLog("PR Created successfully (Simulated)", "success");
+      setPrUrl('https://github.com/demo/repo/pull/1');
       return;
     }
 
@@ -315,20 +456,18 @@ function App() {
     if (!currentFile || !suggestedCode) return;
 
     addLog(`Initiating Pull Request for ${currentFile.path}...`, 'loading');
-    setIsAgentThinking(true);
     try {
       const res = await api.createPR(currentRepoUrl, currentFile.path, suggestedCode);
-      if (res.success) {
+      if (res?.success) {
         addLog(`Pull Request created successfully!`, 'success');
-        addLog(`URL: ${res.pr_url}`, 'success');
-        window.open(res.pr_url, '_blank');
+        addLog(`URL: ${res?.pr_url}`, 'success');
+        setPrUrl(res?.pr_url);
+        setPipelineStep('pr');
       } else {
-        addLog(`PR Failed: ${res.error}`, 'error');
+        addLog(`PR Failed: ${res?.error || "Unknown error"}`, 'error');
       }
     } catch (e) {
       addLog(`PR Error: ${e.message}`, 'error');
-    } finally {
-      setIsAgentThinking(false);
     }
   };
 
@@ -371,14 +510,14 @@ function App() {
       const res = await api.runTests(code);
       setAgentState(prev => ({ 
         ...prev, 
-        result: res.passed ? "Success: All tests passed!" : `Failed: ${res.error || 'Execution error'}`,
-        testOutput: res.output,
-        testPassed: res.passed
+        result: res?.passed ? "Success: All tests passed!" : `Failed: ${res?.error || 'Execution error'}`,
+        testOutput: res?.output || "",
+        testPassed: !!res?.passed
       }));
-      if (res.passed) {
+      if (res?.passed) {
         addLog("Tests passed successfully!", "success");
       } else {
-        addLog(`Tests failed: ${res.error}`, "error");
+        addLog(`Tests failed: ${res?.error || "Execution failed"}`, "error");
       }
     } catch (e) {
       console.error(e);
@@ -422,6 +561,7 @@ function App() {
       return;
     }
 
+    setPipelineStep('apply');
     addLog("Applying AI fix to editor...", "success");
     setCode(cleanCode);
     updateFileContent(cleanCode);
@@ -429,9 +569,13 @@ function App() {
     setAgentStatus('Monitoring'); // Set back to Monitoring to allow next step detection
     setFixApplied(true);
     
-    if (isDemoMode) {
-      addLog("Logic Verified: subtract(10, 5) => 5 ✓", "success");
-    }
+    setTimeout(async () => {
+       setPipelineStep('verify');
+       await new Promise(r => setTimeout(r, 1500));
+       if (isDemoMode) {
+         addLog("Logic Verified: subtract(10, 5) => 5 ✓", "success");
+       }
+    }, 500);
   };
 
   const handleFileRejected = () => {
@@ -451,17 +595,27 @@ function App() {
     console.log("Fix rejected, closing panel.");
   };
 
+  const handleCloseIssue = () => {
+    setAgentState(null);
+    setSuggestedCode(null);
+    setAgentStatus('Monitoring');
+  };
+
   const loadFileContent = (fileId) => {
     const file = files.find(f => f.id === fileId);
     if (file) {
       setSelectedFileId(fileId);
-      // Content update is handled by useEffect
+      // [MULTI-FILE UPGRADE] Clear issue view when manually selecting a file from tree
+      setAgentState(null);
+      setSuggestedCode(null);
     }
   };
 
   // --- Landing Page Routing logic ---
   const handleEnterWorkspace = () => {
     setIsInitializing(true);
+    setIsDemoMode(false);
+    setIsGuidedDemoActive(false);
     setTimeout(() => {
       setIsInitializing(false);
       setScreen('workspace');
@@ -477,13 +631,13 @@ function App() {
       setScreen('workspace');
       setFiles(DEMO_FILES);
       setSelectedFileId('demo-3'); // Start on subtract.py
-      setIsAgentMode(false); // SHOULD START AS OFF
+      setIsAgentMode(false); // START AS OFF
       setAgentStatus('Idle');
       setFixApplied(false);
+      setIsDemoMode(true);
+      setIsGuidedDemoActive(true);
       addLog("Demo loaded: 'Mathematics Operations' project.", "success");
-      addLog("Hint: Look at subtract.py for the logic bug.", "info");
-      
-      // Analysis is triggered manually in Step 1
+      addLog("Hint: Audit subtract.py to find the logic bug.", "info");
     }, 1200);
   };
 
@@ -523,6 +677,8 @@ function App() {
     return <LandingPage onEnter={handleEnterWorkspace} onDemo={handleDemoProject} />;
   }
 
+  if (!repositoryIssues) return null;
+
   // --- Main Workspace ---
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden text-vscode-text font-sans animate-fade-in"
@@ -533,7 +689,11 @@ function App() {
           <div className="flex items-center gap-3">
             <Sparkles size={14} className="text-vscode-accent animate-pulse" />
             <span className="text-[10px] font-black uppercase tracking-widest text-vscode-accent">
-              🎯 Guided Demo — Follow the cursor to experience the agent flow
+              {demoError ? (
+                <span className="text-red-400 animate-pulse">⚠️ {demoError}</span>
+              ) : (
+                "🎯 Guided Demo — Follow the cursor to experience the agentic workflow"
+              )}
             </span>
           </div>
           <button 
@@ -579,9 +739,9 @@ function App() {
           
           {user ? (
             <div className="flex items-center gap-3 bg-white/5 border border-white/5 rounded-full pl-1.5 pr-4 py-1.5">
-              <img src={user.avatar_url || "https://github.com/identicons/demo.png"} alt={user.login} className="w-7 h-7 rounded-full border border-white/10 shadow-sm" />
+              <img src={user?.avatar_url || "https://github.com/identicons/demo.png"} alt={user?.login || "User"} className="w-7 h-7 rounded-full border border-white/10 shadow-sm" />
               <div className="flex flex-col">
-                <span className="text-[10px] font-black text-white leading-tight">{user.name || user.login}</span>
+                <span className="text-[10px] font-black text-white leading-tight">{user?.name || user?.login || "User"}</span>
                 <span className="text-[9px] text-gray-500 font-bold tracking-wider leading-tight">GitHub Connected</span>
               </div>
               <button 
@@ -597,7 +757,7 @@ function App() {
               id="github-login-btn"
               onClick={() => {
                 if (isDemoMode) {
-                  setUser({ name: 'Demo User', login: 'demo-dev', avatar_url: '' });
+                  setUser({ name: 'Demo Engineer', login: 'demo-pro', avatar_url: 'https://github.com/identicons/demo.png' });
                   addLog("Simulated GitHub login success.", "success");
                 } else {
                   window.location.href = "http://localhost:5000/login/github";
@@ -641,101 +801,98 @@ function App() {
           onRunAgent={manualRunAgent}
           onFixApplied={handleFileApplied}
           onFixRejected={handleFileRejected}
+          onCloseIssue={handleCloseIssue}
           onCreatePR={handleCreatePR}
           activeFileName={files?.find(f => f.id === selectedFileId)?.name || 'Editor'}
         />
-        <AIAssistant 
-          agentState={agentState} 
-          isAgentThinking={isAgentThinking}
-          agentStatus={agentStatus}
-          prDetails={prDetails}
-          isDemoMode={isDemoMode}
-        />
-      </div>
+        <div className="w-80 flex flex-col shrink-0 gap-0 overflow-hidden border-l border-white/5" style={{ background: '#05080E' }}>
+          {/* Sidebar Tabs */}
+          <div className="flex border-b border-white/5 bg-white/[0.02]">
+            <button
+              onClick={() => setSidebarTab('pipeline')}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${
+                sidebarTab === 'pipeline' ? 'text-cyan-400 border-b-2 border-cyan-400 bg-cyan-400/5' : 'text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              <LayoutPanelLeft size={12} />
+              Pipeline
+            </button>
+            <button
+              onClick={() => setSidebarTab('issues')}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 text-[10px] font-black uppercase tracking-widest transition-all relative ${
+                sidebarTab === 'issues' ? 'text-red-400 border-b-2 border-red-400 bg-red-400/5' : 'text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              <Search size={12} />
+              Issues
+              {repositoryIssues.length > 0 && (
+                <span className="absolute top-2 right-4 w-4 h-4 rounded-full bg-red-500 text-[9px] text-white flex items-center justify-center animate-bounce shadow-glow-red">
+                  {repositoryIssues.length}
+                </span>
+              )}
+            </button>
+          </div>
 
-      {/* ── PR SUCCESS MODAL ── */}
-      {showPRModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-fade-in">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setShowPRModal(false)} />
-          <div className="relative w-full max-w-lg rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_80px_rgba(34,211,238,0.2)] animate-fade-up"
-            style={{ background: '#0B0F19' }}>
-            
-            <div className="p-8 text-center">
-              <div className="w-20 h-20 bg-green-500/10 border border-green-500/30 rounded-full flex items-center justify-center mx-auto mb-6 shadow-glow-green">
-                <CheckCircle2 size={40} className="text-green-500" />
+          <div className="flex-1 overflow-y-auto">
+            {sidebarTab === 'pipeline' ? (
+              <div className="p-4 space-y-4">
+                <AgentPipeline 
+                  currentStepId={pipelineStep} 
+                  status={agentStatus} 
+                  explanation={pipelineExplanation} 
+                />
+                <AIAssistant 
+                  agentState={agentState} 
+                  isAgentThinking={isAgentThinking}
+                  agentStatus={agentStatus}
+                  prDetails={prDetails}
+                  isDemoMode={isDemoMode}
+                />
+                {!isAnalyzingRepo && (
+                  <button
+                    onClick={analyzeRepository}
+                    className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:bg-white/10 hover:text-white transition-all group"
+                  >
+                    Scan Full Repository
+                  </button>
+                )}
               </div>
-              
-              <h2 className="text-2xl font-black text-white mb-2">Pull Request Created!</h2>
-              <p className="text-gray-400 text-sm mb-8 leading-relaxed px-4">
-                The AI fix has been successfully verified and packaged into a new PR on your repository.
-              </p>
-              
-              <div className="bg-black/40 border border-white/5 rounded-2xl p-6 text-left mb-8">
-                <div className="flex items-center gap-3 mb-4">
-                  <GitPullRequest size={18} className="text-white" />
-                  <div className="text-xs font-black text-white uppercase tracking-tighter">user/demo-repo</div>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between text-[10px] uppercase tracking-widest">
-                    <span className="text-gray-600 font-bold">Branch</span>
-                    <span className="text-cyan-400 font-black">fix/subtract-bug</span>
-                  </div>
-                  <div className="flex items-center justify-between text-[10px] uppercase tracking-widest">
-                    <span className="text-gray-600 font-bold">Commit</span>
-                    <span className="text-white font-black italic">"Fix incorrect subtraction logic"</span>
-                  </div>
-                  <div className="flex items-center justify-between text-[10px] uppercase tracking-widest">
-                    <span className="text-gray-600 font-bold">Status</span>
-                    <span className="flex items-center gap-1.5 text-green-400 font-black">
-                      <ShieldCheck size={12} /> VERIFIED
-                    </span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex gap-4">
-                <button 
-                  onClick={() => setShowPRModal(false)}
-                  className="flex-1 px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl font-black text-xs text-white uppercase tracking-widest transition-all"
-                >
-                  Close
-                </button>
-                <a 
-                  href="https://github.com/demo/repo/pull/1" 
-                  target="_blank"
-                  className="flex-1 flex items-center justify-center gap-2 px-8 py-4 bg-vscode-accent hover:opacity-90 rounded-2xl font-black text-xs text-white uppercase tracking-widest transition-all shadow-glow-blue"
-                >
-                  View PR <ExternalLink size={14} />
-                </a>
-              </div>
-            </div>
-            
-            <div className="h-1.5 w-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500" />
+            ) : (
+              <IssuesPanel 
+                issues={repositoryIssues}
+                onIssueClick={handleIssueClick}
+                selectedIssueId={selectedFileId}
+                isAnalyzing={isAnalyzingRepo}
+                progress={analysisProgress}
+              />
+            )}
           </div>
         </div>
-      )}
-      {/* ── GUIDED CURSOR ── */}
-      <GuidedCursor step={demoStep} isVisible={isDemoMode && screen === 'workspace'} />
-    </div>
-  );
-}
+      </div>
 
-function ShieldCheck({ size = 16, className = "" }) {
-  return (
-    <svg 
-      width={size} 
-      height={size} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2.5" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className={className}
-    >
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      <path d="m9 12 2 2 4-4" />
-    </svg>
+      {/* ── PR WORKFLOW (Preview → Creating → Success) ── */}
+      <PRWorkflow
+        isOpen={showPRWorkflow}
+        onClose={() => setShowPRWorkflow(false)}
+        onConfirm={executePR}
+        agentState={agentState}
+        currentFile={files?.find(f => f.id === selectedFileId)}
+        suggestedCode={suggestedCode}
+        isDemoMode={isDemoMode}
+        prUrl={prUrl}
+      />
+
+      {/* ── GUIDED CURSOR ── */}
+      {isGuidedDemoActive && isDemoMode && screen === 'workspace' && [
+        DEMO_STEPS.ENABLE_AGENT,
+        DEMO_STEPS.APPLY_FIX,
+        DEMO_STEPS.GITHUB_LOGIN,
+        DEMO_STEPS.PASTE_REPO,
+        DEMO_STEPS.CREATE_PR
+      ].includes(currentStep) && (
+        <CursorGuide config={demoConfig} isVisible={true} />
+      )}
+    </div>
   );
 }
 

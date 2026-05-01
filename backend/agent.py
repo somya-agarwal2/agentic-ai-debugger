@@ -44,8 +44,8 @@ def run_agent_loop(code: str, max_iterations: int = 1) -> dict:
 
     return {
         "status": "review_ready",
-        "code": code,  # Keep original code as 'code'
-        "fix": fixed_code, # Suggested fix
+        "code": code,          # Original code unchanged
+        "fixed_code": fixed_code,  # KEY FIX: was 'fix', now 'fixed_code'
         "error": error,
         "explanation": explanation,
         "logs": logs,

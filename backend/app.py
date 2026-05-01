@@ -87,7 +87,8 @@ def github_logout():
 # Persistent storage for the current project context
 current_project = {
     "files": [],
-    "path": None
+    "path": None,
+    "issues_list": []
 }
 
 def get_file_structure(root_dir):
@@ -303,6 +304,50 @@ def run_tests_endpoint():
         return jsonify({"error": "Invalid code input"}), 400
     result = run_tests(code)
     return jsonify(result), 200
+
+@app.route('/analyze-repo', methods=['POST'])
+def analyze_repo_endpoint():
+    print("\n--- STARTING FULL REPO ANALYSIS ---")
+    files = current_project.get("files", [])
+    if not files:
+        return jsonify({"error": "No project loaded"}), 400
+    
+    current_project["issues_list"] = []
+    
+    for file in files:
+        file_name = file.get("name", "unknown")
+        # Only analyze code files
+        if not (file_name.endswith('.py') or file_name.endswith('.js') or file_name.endswith('.ts')):
+            continue
+            
+        print(f"Analyzing file: {file_name}")
+        try:
+            code = file.get("content", "")
+            result = analyze_code(code)
+            
+            issue_item = {
+                "file": file_name,
+                "issue": result.get("issue", False),
+                "explanation": result.get("explanation", ""),
+                "fix": result.get("fixed_code") or result.get("fix"),
+                "original_code": code
+            }
+            
+            current_project["issues_list"].append(issue_item)
+            
+            if issue_item["issue"]:
+                print(f"Issue found in: {file_name}")
+            else:
+                print(f"No issue in: {file_name}")
+                
+        except Exception as e:
+            print(f"Error analyzing {file_name}: {str(e)}")
+            continue
+            
+    return jsonify({
+        "issues_list": current_project["issues_list"],
+        "selected_issue": current_project["issues_list"][0] if current_project["issues_list"] else None
+    }), 200
 
 @app.route('/agent-run', methods=['POST'])
 def agent_run_endpoint():
