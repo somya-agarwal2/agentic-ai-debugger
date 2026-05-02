@@ -16,7 +16,9 @@ from services.prompt_service import load_prompts, save_prompts
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev_secret_key")
+app.secret_key = os.getenv("FLASK_SECRET_KEY")
+app.config["SESSION_COOKIE_SECURE"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "None"
 CORS(app, supports_credentials=True, origins=[
     "http://localhost",
     "http://localhost:80",
@@ -27,6 +29,14 @@ CORS(app, supports_credentials=True, origins=[
 
 GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
 GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
+
+@app.route("/")
+def home():
+    return {"status": "backend running"}, 200
+
+@app.route("/health")
+def health():
+    return {"status": "ok"}, 200
 
 @app.route('/login/github')
 def github_login():
@@ -79,7 +89,9 @@ def github_callback():
     }
     
     # Redirect back to frontend
-    return redirect("http://localhost:5173")
+    FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+    return redirect(FRONTEND_URL)
 
 @app.route('/auth/github/check')
 def github_check():
