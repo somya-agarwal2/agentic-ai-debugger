@@ -383,7 +383,6 @@ def analyze_repo_endpoint():
                     print(f"!!! ISSUE DETECTED in {file_name}")
                     return {
                         "file": file_name,
-                        "path": file_item.get("path", file_name),
                         "issue": result.get("issue") or "Logical Anomaly",
                         "fix": result.get("fixed_code") or result.get("fix"),
                         "explanation": result.get("explanation", ""),

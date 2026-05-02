@@ -107,7 +107,6 @@ function App() {
   const [agentState, setAgentState] = useState(null);
 
   const [isAgentMode, setIsAgentMode] = useState(false);
-  const [isAutopilotMode, setIsAutopilotMode] = useState(false);
   const [agentStatus, setAgentStatus] = useState('Idle');
   const [prDetails, setPrDetails] = useState(null);
   const [rejectedIssues, setRejectedIssues] = useState([]);
@@ -287,15 +286,9 @@ function App() {
   const isAgentRunning = React.useRef(false);
 
   const runAutonomousLoop = async (fileContent, fileId) => {
-    if (isAgentThinking || !fileId) return;
+    if (isAgentThinking) return;
     setIsAgentThinking(true);
-    const targetFile = files.find(f => f.id === fileId);
-    const fileName = targetFile?.name || 'file';
-    if (!targetFile) {
-       addLog("Autopilot Error: Could not resolve file identity for fix.", "error");
-       setIsAgentThinking(false);
-       return;
-    }
+    const fileName = files.find(f => f.id === fileId)?.name || 'file';
     addLog(`Analyzing ${fileName}...`, 'loading');
     setAgentStatus('Analyzing...');
     isAgentRunning.current = true;
@@ -388,19 +381,6 @@ function App() {
         
         addLog(`Issue detected in ${fileName}: ${res.error}`, 'info');
         setAgentStatus('Monitoring');
-
-        // [AUTOPILOT MODE] Automatic Fix & PR Generation
-        if (isAutopilotMode && cleanCode) {
-          addLog(`[Autopilot] Automatically applying fix for ${fileName}...`, 'success');
-          updateFileContent(cleanCode, fileId);
-          setFixApplied(true);
-          
-          // Wait a moment for state to settle before PR
-          setTimeout(() => {
-            addLog(`[Autopilot] Automatically initiating Pull Request...`, 'loading');
-            executePRFromAutopilot(fileId, cleanCode);
-          }, 2000);
-        }
       } else {
         addLog(`No issues found in ${fileName}.`, 'success');
         setAgentStatus('Monitoring');
@@ -422,32 +402,10 @@ function App() {
       }
     }
   };
-  
-  const executePRFromAutopilot = async (fileId, fixedCode) => {
-    if (!user) {
-      addLog("[Autopilot] Login with GitHub required for automatic PR", "error");
-      return;
-    }
-    const currentFile = files?.find(f => f.id === fileId);
-    if (!currentFile || !fixedCode) return;
-
-    try {
-      const res = await api.createPR(currentRepoUrl, currentFile.path, fixedCode);
-      if (res?.success) {
-        addLog(`[Autopilot] PR created automatically: ${res?.pr_url}`, 'success');
-        setPrUrl(res?.pr_url);
-        setPipelineStep('pr');
-      } else {
-        addLog(`[Autopilot] PR Failed: ${res?.error || "Unknown error"}`, 'error');
-      }
-    } catch (e) {
-      addLog(`[Autopilot] PR Error: ${e.message}`, 'error');
-    }
-  };
 
   const analyzeRepository = async (bypassModeCheck = false, overrideFiles = null) => {
     const targetFiles = overrideFiles || files;
-    if ((!isAgentMode && !isAutopilotMode && !bypassModeCheck) || isAnalyzingRepo || !targetFiles || targetFiles.length === 0) {
+    if ((!isAgentMode && !bypassModeCheck) || isAnalyzingRepo || !targetFiles || targetFiles.length === 0) {
       return;
     }
 
@@ -482,10 +440,9 @@ function App() {
         if (list.length > 0) {
           const formattedIssues = list.map((iss, index) => {
             const issueId = `issue-${index}-${iss.file}`;
-            const matchedFile = targetFiles.find(f => f.path === iss.path) || targetFiles.find(f => f.name === iss.file);
             return {
               id: issueId,
-              fileId: matchedFile?.id,
+              fileId: targetFiles.find(f => f.name === iss.file)?.id,
               fileName: iss.file || "Unknown",
               error: iss.issue || "Logical Bug Detected",
               explanation: iss.explanation || "",
@@ -630,7 +587,7 @@ function App() {
 
   // Real-time analysis with debounce
   useEffect(() => {
-    if ((!isAgentMode && !isAutopilotMode) || screen !== 'workspace' || !code) return;
+    if (!isAgentMode || screen !== 'workspace' || !code) return;
     
     const currentFile = files.find(f => f.id === selectedFileId);
     if (currentFile && currentFile.content === code && agentStatus !== 'Monitoring') return;
@@ -641,20 +598,7 @@ function App() {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [code, isAgentMode, isAutopilotMode, screen, selectedFileId]);
-
-  // [AUTOPILOT BATCH FIX] Automatically process all issues in the repository
-  useEffect(() => {
-    if (isAutopilotMode && repositoryIssues.length > 0 && !isAgentThinking && !isAnalyzingRepo && screen === 'workspace') {
-      const nextIssue = repositoryIssues[0];
-      
-      // If we are not already on this file, switch to it to trigger the real-time fix loop
-      if (selectedFileId !== nextIssue.fileId) {
-        addLog(`[Autopilot] Automatically switching to ${nextIssue.fileName} to address detected issue...`, 'info');
-        loadFileContent(nextIssue.fileId);
-      }
-    }
-  }, [isAutopilotMode, repositoryIssues, isAgentThinking, isAnalyzingRepo, screen, selectedFileId]);
+  }, [code, isAgentMode, screen, selectedFileId]);
 
   const manualRunTests = async () => {
     setIsAgentThinking(true);
@@ -1094,8 +1038,8 @@ function App() {
               onLog={addLog}
               onRepoLoaded={(url, loadedFiles) => {
                 setCurrentRepoUrl(url);
-                if ((isAgentMode || isAutopilotMode) && loadedFiles && loadedFiles.length > 0) {
-                  // Repo loaded while Agent/Autopilot Mode is ON, start full scan!
+                if (isAgentMode && loadedFiles && loadedFiles.length > 0) {
+                  // Repo loaded while Agent Mode is ON, start full scan!
                   analyzeRepository(false, loadedFiles);
                 }
               }}
@@ -1117,8 +1061,6 @@ function App() {
           isAgentThinking={isAgentThinking}
           isAgentMode={isAgentMode}
           setIsAgentMode={toggleAgentMode}
-          isAutopilotMode={isAutopilotMode}
-          setIsAutopilotMode={() => setIsAutopilotMode(!isAutopilotMode)}
           onRunTests={manualRunTests}
           onRunAgent={manualRunAgent}
           onFixApplied={handleFileApplied}
@@ -1140,7 +1082,7 @@ function App() {
               <LayoutPanelLeft size={12} />
               Pipeline
             </button>
-            {(isAgentMode || isAutopilotMode) && (
+            {isAgentMode && (
               <button
                 id="issues-tab"
                 data-testid="tab-issues"
