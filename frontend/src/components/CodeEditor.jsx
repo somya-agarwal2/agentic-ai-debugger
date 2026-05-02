@@ -192,7 +192,7 @@ const CodeEditor = ({
           </button>
 
           <div className="flex items-center gap-3">
-            {isAgentMode && (
+            {(isAgentMode || isAutopilotMode) && (
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-[10px] font-bold uppercase tracking-widest text-cyan-400 animate-pulse">
                 <Activity size={12} />
                 AI is analyzing in real-time...

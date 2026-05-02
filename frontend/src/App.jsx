@@ -441,7 +441,7 @@ function App() {
 
   const analyzeRepository = async (bypassModeCheck = false, overrideFiles = null) => {
     const targetFiles = overrideFiles || files;
-    if ((!isAgentMode && !bypassModeCheck) || isAnalyzingRepo || !targetFiles || targetFiles.length === 0) {
+    if ((!isAgentMode && !isAutopilotMode && !bypassModeCheck) || isAnalyzingRepo || !targetFiles || targetFiles.length === 0) {
       return;
     }
 
@@ -623,7 +623,7 @@ function App() {
 
   // Real-time analysis with debounce
   useEffect(() => {
-    if (!isAgentMode || screen !== 'workspace' || !code) return;
+    if ((!isAgentMode && !isAutopilotMode) || screen !== 'workspace' || !code) return;
     
     const currentFile = files.find(f => f.id === selectedFileId);
     if (currentFile && currentFile.content === code && agentStatus !== 'Monitoring') return;
@@ -634,7 +634,7 @@ function App() {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [code, isAgentMode, screen, selectedFileId]);
+  }, [code, isAgentMode, isAutopilotMode, screen, selectedFileId]);
 
   const manualRunTests = async () => {
     setIsAgentThinking(true);
@@ -1074,8 +1074,8 @@ function App() {
               onLog={addLog}
               onRepoLoaded={(url, loadedFiles) => {
                 setCurrentRepoUrl(url);
-                if (isAgentMode && loadedFiles && loadedFiles.length > 0) {
-                  // Repo loaded while Agent Mode is ON, start full scan!
+                if ((isAgentMode || isAutopilotMode) && loadedFiles && loadedFiles.length > 0) {
+                  // Repo loaded while Agent/Autopilot Mode is ON, start full scan!
                   analyzeRepository(false, loadedFiles);
                 }
               }}
@@ -1120,7 +1120,7 @@ function App() {
               <LayoutPanelLeft size={12} />
               Pipeline
             </button>
-            {isAgentMode && (
+            {(isAgentMode || isAutopilotMode) && (
               <button
                 id="issues-tab"
                 data-testid="tab-issues"
