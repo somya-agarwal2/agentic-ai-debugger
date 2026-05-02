@@ -73,16 +73,29 @@ def extract_code_from_ai(raw, original_code=""):
     
     def final_clean(text):
         if not text: return ""
-        text = text.replace('\\n', '\n')
-        text = re.sub(r'```[\s\S]*?```', '', text)
+        text = str(text).replace('\\n', '\n').replace('\\t', '\t')
+        
+        # 1. Remove markdown code blocks if they wrap the entire content
+        text = re.sub(r'^```[a-zA-Z]*\n', '', text)
+        text = re.sub(r'\n```$', '', text)
+        text = text.replace('```', '')
+
+        # 2. Strip Python-style variable assignments if AI tried to wrap non-Python code
+        # Example: html = """...""" or code = '''...'''
+        text = text.strip()
+        assignment_match = re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*\s*=\s*(["\']{3}|["\'])([\s\S]*?)\1$', text)
+        if assignment_match:
+            text = assignment_match.group(2)
+            
         return text.strip()
 
     try:
         clean_json = raw.strip()
-        if "```json" in clean_json:
-            clean_json = clean_json.split("```json")[1].split("```")[0].strip()
-        elif "```" in clean_json:
-            clean_json = clean_json.split("```")[1].split("```")[0].strip()
+        # Find the first { and last } to extract JSON if there's surrounding text
+        start = clean_json.find('{')
+        end = clean_json.rfind('}')
+        if start != -1 and end != -1:
+            clean_json = clean_json[start:end+1]
             
         data = json.loads(clean_json)
         if isinstance(data, list): data = data[0]
@@ -93,11 +106,14 @@ def extract_code_from_ai(raw, original_code=""):
         severity = data.get("severity") or "Medium"
         category = data.get("category") or "Logic"
         
-        if fixed: return final_clean(str(fixed)), final_clean(str(expl)), trace, severity, category
+        if fixed: 
+            return final_clean(fixed), expl, trace, severity, category
     except:
         pass
 
-    python_block = re.search(r"```python\s*([\s\S]*?)```", raw, re.IGNORECASE)
-    if python_block: return final_clean(python_block.group(1)), "Extracted from markdown", [], "Medium", "Logic"
+    # Fallback: look for any code block if JSON parsing fails
+    any_block = re.search(r"```[a-zA-Z]*\s*([\s\S]*?)```", raw)
+    if any_block: 
+        return final_clean(any_block.group(1)), "Extracted from code block fallback", [], "Medium", "Logic"
 
     return original_code, "AI format issue: fallback applied", [], "High", "Syntax"
