@@ -1,8 +1,11 @@
 import axios from 'axios';
 
-// In production (Docker), nginx proxies /api/* → backend:5000
-// In dev, backend runs on localhost:5000 directly
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+if (!API_URL) {
+  throw new Error("VITE_API_URL is not defined");
+}
+
 axios.defaults.withCredentials = true;
 axios.defaults.timeout = 120000; // 120 seconds
 
