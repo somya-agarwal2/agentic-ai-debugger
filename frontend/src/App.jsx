@@ -287,9 +287,15 @@ function App() {
   const isAgentRunning = React.useRef(false);
 
   const runAutonomousLoop = async (fileContent, fileId) => {
-    if (isAgentThinking) return;
+    if (isAgentThinking || !fileId) return;
     setIsAgentThinking(true);
-    const fileName = files.find(f => f.id === fileId)?.name || 'file';
+    const targetFile = files.find(f => f.id === fileId);
+    const fileName = targetFile?.name || 'file';
+    if (!targetFile) {
+       addLog("Autopilot Error: Could not resolve file identity for fix.", "error");
+       setIsAgentThinking(false);
+       return;
+    }
     addLog(`Analyzing ${fileName}...`, 'loading');
     setAgentStatus('Analyzing...');
     isAgentRunning.current = true;
@@ -476,9 +482,10 @@ function App() {
         if (list.length > 0) {
           const formattedIssues = list.map((iss, index) => {
             const issueId = `issue-${index}-${iss.file}`;
+            const matchedFile = targetFiles.find(f => f.path === iss.path) || targetFiles.find(f => f.name === iss.file);
             return {
               id: issueId,
-              fileId: targetFiles.find(f => f.name === iss.file)?.id,
+              fileId: matchedFile?.id,
               fileName: iss.file || "Unknown",
               error: iss.issue || "Logical Bug Detected",
               explanation: iss.explanation || "",
