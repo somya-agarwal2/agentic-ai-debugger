@@ -636,6 +636,19 @@ function App() {
     return () => clearTimeout(timer);
   }, [code, isAgentMode, isAutopilotMode, screen, selectedFileId]);
 
+  // [AUTOPILOT BATCH FIX] Automatically process all issues in the repository
+  useEffect(() => {
+    if (isAutopilotMode && repositoryIssues.length > 0 && !isAgentThinking && !isAnalyzingRepo && screen === 'workspace') {
+      const nextIssue = repositoryIssues[0];
+      
+      // If we are not already on this file, switch to it to trigger the real-time fix loop
+      if (selectedFileId !== nextIssue.fileId) {
+        addLog(`[Autopilot] Automatically switching to ${nextIssue.fileName} to address detected issue...`, 'info');
+        loadFileContent(nextIssue.fileId);
+      }
+    }
+  }, [isAutopilotMode, repositoryIssues, isAgentThinking, isAnalyzingRepo, screen, selectedFileId]);
+
   const manualRunTests = async () => {
     setIsAgentThinking(true);
     addLog("Running execution tests...", "loading");
