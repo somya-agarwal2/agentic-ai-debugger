@@ -2,8 +2,6 @@
 
 The Next-Generation Autonomous AI Debugger. AgentSmiths identifies, diagnoses, and repairs logical flaws and bugs in your codebase before they hit production.
 
-**[🌐 Live Demo URL - Insert Link Here]**
-
 ## 🚀 About the Project
 AgentSmiths is an AI-powered developer tool designed to autonomously detect bugs, trace execution, and generate fixes via an interactive, agentic workflow. It features:
 - **Repository-Wide Analysis:** Scans entire projects to flag hidden logical errors.
@@ -20,7 +18,26 @@ AgentSmiths is an AI-powered developer tool designed to autonomously detect bugs
 ---
 
 ## 🏛️ Architecture
-*(Insert architecture diagram or additional structural details here)*
+```mermaid
+graph TD
+    A[Frontend UI<br/>React/Vite Panel] --> B[Backend API<br/>Flask Server]
+
+    B --> C[Prompt Manager<br/>config/prompts]
+    B --> D[Repo / File Parser<br/>Parse code, logs, files]
+
+    C --> E[Agent Orchestrator<br/>agent/runner.py]
+    D --> E
+
+    E --> F[Bug Detection Agent]
+    E --> G[Root Cause Analysis Agent]
+    E --> H[Fix Suggestion Generation Agent]
+
+    F --> I[LLM Engine / Ollama phi3]
+    G --> I
+    H --> I
+
+    I --> J[Structured Fix / PR Output]
+```
 
 ---
 
@@ -94,6 +111,14 @@ Validate the visual hierarchy and responsiveness.
 - **Responsive Design:** Resize the browser window to ensure the glassmorphic dashboard, split-pane editors, and floating action panels scale correctly on smaller monitors.
 - **Animation & Transitions:** Verify that the "Agent Thinking" pipeline, progress bars, and scroll-triggered animations (like the Feedback section) trigger smoothly without blocking the main thread.
 - **Error States:** Purposely shut down the Ollama server and trigger an analysis to ensure the UI gracefully displays a "Connection Error" fallback notification instead of crashing the app.
+
+### 5. Prototype Preview
+### Landing Page
+<img width="1600" height="767" alt="image" src="https://github.com/user-attachments/assets/2b29b027-ede0-4c81-8fe1-b472fa622635" />
+### Debugging Workspace
+<img width="1600" height="768" alt="image" src="https://github.com/user-attachments/assets/1e8edc92-cca7-4f1b-8550-1a802f812576" />
+### Feedback / Contact Panel
+<img width="1600" height="766" alt="image" src="https://github.com/user-attachments/assets/19ab1718-11de-4769-9cc2-7c8dee84b473" />
 
 ---
 
