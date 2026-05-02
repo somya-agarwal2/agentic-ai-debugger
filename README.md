@@ -8,7 +8,8 @@ The Agentic AI Debugger is a state-of-the-art developer tool designed to autonom
 
 ## 🔗 Quick Links
 
-*   **🌐 Live Demo:** [agentic-ai-debugger.vercel.app](https://agentic-ai-debugger.vercel.app/)
+*   **🌐 Live Project Link:** [agentic-ai-debugger.vercel.app](https://agentic-ai-debugger.vercel.app/)
+*   **🎬 Demo Video:** [Watch on Google Drive](https://drive.google.com/file/d/1N7vBcvkn9mZlTll1wkVBwNyrl0EVxP1C/view?usp=sharing)
 *   **⚙️ Backend API:** [agentic-ai-debugger.onrender.com](https://agentic-ai-debugger.onrender.com/)
 *   **🎨 UI Design (Figma):** [View Design Mockups](https://www.figma.com/design/9j6pG1Go3x11iWEhEkHnGm/Untitled?node-id=0-1&t=fH3qFK3NJQi5hn8O-1)
 
