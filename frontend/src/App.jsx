@@ -1012,6 +1012,9 @@ function App() {
                   addLog("Simulated GitHub login success.", "success");
                 } else {
                   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+                  if (!API_URL) {
+                    throw new Error("VITE_API_URL is not defined");
+                  }
                   window.location.href = `${API_URL}/login/github`;
                 }
               }}

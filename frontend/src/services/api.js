@@ -11,17 +11,17 @@ axios.defaults.timeout = 120000; // 120 seconds
 
 export const api = {
   checkAuth: async () => {
-    const res = await axios.get(`${API}/auth/github/check`);
+    const res = await axios.get(`${API_URL}/auth/github/check`);
     return res.data;
   },
   logout: async () => {
-    const res = await axios.get(`${API}/auth/github/logout`);
+    const res = await axios.get(`${API_URL}/auth/github/logout`);
     return res.data;
   },
   runTests: async (code) => {
     console.log("Sending request...");
     try {
-      const res = await axios.post(`${API}/run-tests`, { code });
+      const res = await axios.post(`${API_URL}/run-tests`, { code });
       console.log("Response:", res.data);
       return res.data;
     } catch (error) {
@@ -32,7 +32,7 @@ export const api = {
   runAgent: async (code, signal) => {
     console.log("Sending request...");
     try {
-      const res = await axios.post(`${API}/agent-run`, { code }, { signal });
+      const res = await axios.post(`${API_URL}/agent-run`, { code }, { signal });
       console.log("Response:", res.data);
       return res.data;
     } catch (error) {
@@ -47,29 +47,29 @@ export const api = {
   uploadProject: async (file) => {
     const formData = new FormData();
     formData.append('file', file);
-    const res = await axios.post(`${API}/upload-project`, formData, {
+    const res = await axios.post(`${API_URL}/upload-project`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
     return res.data;
   },
   loadRepo: async (url) => {
-    const res = await axios.post(`${API}/load-repo`, { url });
+    const res = await axios.post(`${API_URL}/load-repo`, { url });
     return res.data;
   },
   createPR: async (repo_url, file_path, new_code) => {
-    const res = await axios.post(`${API}/github/create-pr`, { repo_url, file_path, new_code });
+    const res = await axios.post(`${API_URL}/github/create-pr`, { repo_url, file_path, new_code });
     return res.data;
   },
   analyzeRepo: async () => {
-    const res = await axios.post(`${API}/analyze-repo`);
+    const res = await axios.post(`${API_URL}/analyze-repo`);
     return res.data;
   },
   getPrompts: async () => {
-    const res = await axios.get(`${API}/prompts`);
+    const res = await axios.get(`${API_URL}/prompts`);
     return res.data;
   },
   updatePrompts: async (prompts) => {
-    const res = await axios.post(`${API}/prompts`, prompts);
+    const res = await axios.post(`${API_URL}/prompts`, prompts);
     return res.data;
   }
 };
