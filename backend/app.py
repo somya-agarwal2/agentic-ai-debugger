@@ -42,7 +42,8 @@ def health():
 def github_login():
     print(f"--- GITHUB LOGIN START ---")
     print(f"CLIENT_ID: {GITHUB_CLIENT_ID}")
-    github_url = f"https://github.com/login/oauth/authorize?client_id={GITHUB_CLIENT_ID}&scope=user,repo"
+    BASE_URL = os.getenv("BACKEND_URL")
+    github_url = f"https://github.com/login/oauth/authorize?client_id={GITHUB_CLIENT_ID}&redirect_uri={BASE_URL}/github/callback&scope=user,repo"
     print(f"REDIRECT URL: {github_url}")
     return redirect(github_url)
 
@@ -55,17 +56,22 @@ def github_callback():
         return jsonify({"error": "No code provided"}), 400
     
     # Exchange code for token
-    token_url = "https://github.com/login/oauth/access_token"
-    headers = {"Accept": "application/json"}
-    data = {
-        "client_id": GITHUB_CLIENT_ID,
-        "client_secret": GITHUB_CLIENT_SECRET,
-        "code": code
-    }
-    
     print(f"Exchanging code for token...")
-    res = requests.post(token_url, headers=headers, data=data)
+    BASE_URL = os.getenv("BACKEND_URL")
+    
+    res = requests.post(
+        "https://github.com/login/oauth/access_token",
+        headers={"Accept": "application/json"},
+        json={
+            "client_id": GITHUB_CLIENT_ID,
+            "client_secret": GITHUB_CLIENT_SECRET,
+            "code": code,
+            "redirect_uri": f"{BASE_URL}/github/callback"
+        }
+    )
+    
     token_data = res.json()
+    print("GITHUB RESPONSE:", token_data)
     access_token = token_data.get("access_token")
     
     if not access_token:
