@@ -1011,7 +1011,8 @@ function App() {
                   setUser({ name: 'Demo Engineer', login: 'demo-pro', avatar_url: 'https://github.com/identicons/demo.png' });
                   addLog("Simulated GitHub login success.", "success");
                 } else {
-                  window.location.href = "http://localhost:5000/login/github";
+                  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+                  window.location.href = `${API_URL}/login/github`;
                 }
               }}
               className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white px-5 py-2 rounded-full bg-vscode-accent hover:bg-vscode-accent/80 shadow-glow-blue transition-all active:scale-95"
