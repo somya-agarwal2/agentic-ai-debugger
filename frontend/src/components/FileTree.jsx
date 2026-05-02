@@ -3,7 +3,7 @@ import {
   FileCode2, FileJson, FileText, Download, FolderOpen, Folder,
   Search, X, Loader2, ChevronRight, ChevronDown, AlertCircle
 } from 'lucide-react';
-import axios from 'axios';
+
 import { api } from '../services/api';
 
 // ── Normalize File Paths ──

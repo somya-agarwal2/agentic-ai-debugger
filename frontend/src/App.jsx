@@ -870,7 +870,7 @@ function App() {
           </div>
           <h1 className="text-2xl font-black tracking-tight mb-2">Server Connection Error</h1>
           <p className="text-gray-400 text-sm mb-8 leading-relaxed">
-            The AI backend server is currently unreachable. Please ensure the Flask app is running on localhost:5000.
+            The AI backend server is currently unreachable. Please ensure the Flask app is running at {import.meta.env.VITE_API_URL || 'http://localhost:5000'}.
           </p>
           <button 
             onClick={() => window.location.reload()} 
