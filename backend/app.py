@@ -339,7 +339,7 @@ def analyze_repo_endpoint():
     
     all_issues = []
     had_success = False
-    VALID_EXTENSIONS = (".py", ".js", ".ts", ".jsx", ".tsx")
+    VALID_EXTENSIONS = (".py", ".js", ".ts", ".jsx", ".tsx", ".html", ".css", ".json")
     
     print(f"Found {len(files)} total files in project structure.")
     

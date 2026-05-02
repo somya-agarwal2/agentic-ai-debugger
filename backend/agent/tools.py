@@ -58,10 +58,18 @@ def analyze_code(code):
         prompt = prompts["analyze_prompt"].format(syntax_context=syntax_context, code=code)
         
         raw = call_grok(prompt)
+        print("RAW RESPONSE:", raw)
         fix_val, exp_val, trace_val, severity, category = extract_code_from_ai(raw, code)
+        print("EXTRACTED:", (fix_val, exp_val, trace_val, severity, category))
         
         has_issue = fix_val.strip() != code.strip()
         issue_type = "Logic or Syntax Issue" if has_issue else None
+        
+        if isinstance(raw, str) and (raw.startswith("Error:") or raw.startswith("Groq Error:")):
+            has_issue = True
+            issue_type = "API Error"
+            category = "System"
+            severity = "High"
         
         priority_reason = "Logic evaluation"
         

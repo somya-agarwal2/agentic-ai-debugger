@@ -66,10 +66,10 @@ def extract_code_from_ai(raw, original_code=""):
     """
     Robustly extracts fixed_code and explanation from AI response.
     """
-    if not raw: return original_code, "No response", []
+    if not raw: return original_code, "No response", [], "High", "System"
     
-    if isinstance(raw, str) and raw.startswith("Error:"):
-        return original_code, raw, []
+    if isinstance(raw, str) and (raw.startswith("Error:") or raw.startswith("Groq Error:")):
+        return original_code, raw, [], "High", "System"
     
     def final_clean(text):
         if not text: return ""

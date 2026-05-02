@@ -146,21 +146,24 @@ function App() {
     setLogs(prev => [...prev, { time, message, type }]);
   };
 
+  const fetchAuthStatus = async () => {
+    try {
+      const res = await api.checkAuth();
+      if (res.user) setUser(res.user);
+      else setUser(null);
+      setServerError(false);
+    } catch (e) {
+      console.error("Auth check failed:", e);
+      if (!e.response) {
+        setServerError(true);
+      }
+      setUser(null);
+    }
+  };
+
   // Check auth and server status on mount
   useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const res = await api.checkAuth();
-        if (res.user) setUser(res.user);
-        setServerError(false);
-      } catch (e) {
-        console.error("Auth check failed:", e);
-        if (!e.response) {
-          setServerError(true);
-        }
-      }
-    };
-    checkUser();
+    fetchAuthStatus();
   }, []);
 
   const handleCodeChange = (newCode) => {
@@ -400,8 +403,9 @@ function App() {
     }
   };
 
-  const analyzeRepository = async (bypassModeCheck = false) => {
-    if ((!isAgentMode && !bypassModeCheck) || isAnalyzingRepo || !files || files.length === 0) {
+  const analyzeRepository = async (bypassModeCheck = false, overrideFiles = null) => {
+    const targetFiles = overrideFiles || files;
+    if ((!isAgentMode && !bypassModeCheck) || isAnalyzingRepo || !targetFiles || targetFiles.length === 0) {
       return;
     }
 
@@ -412,7 +416,7 @@ function App() {
       setRepositoryIssues([]);
       addLog("Initiating repository-wide analysis...", "loading");
       setPipelineStep('scan');
-      setPipelineExplanation(`Analyzing ${files.length} files for logic patterns...`);
+      setPipelineExplanation(`Analyzing ${targetFiles.length} files for logic patterns...`);
 
       if (isDemoMode) {
         // High-fidelity demo simulation
@@ -438,7 +442,7 @@ function App() {
             const issueId = `issue-${index}-${iss.file}`;
             return {
               id: issueId,
-              fileId: files.find(f => f.name === iss.file)?.id,
+              fileId: targetFiles.find(f => f.name === iss.file)?.id,
               fileName: iss.file || "Unknown",
               error: iss.issue || "Logical Bug Detected",
               explanation: iss.explanation || "",
@@ -677,9 +681,9 @@ function App() {
     setIsAgentMode(newMode);
     
     if (newMode) {
-      // Turning ON: Trigger analysis if files exist
+      // Turning ON: Trigger full repository scan if files exist
       if (files.length > 0) {
-        analyzeRepository(true);
+        analyzeRepository(true, files);
       }
       setAgentStatus('Monitoring');
     } else {
@@ -777,13 +781,10 @@ function App() {
   };
 
   const loadFileContent = (fileId) => {
-    const file = files.find(f => f.id === fileId);
-    if (file) {
-      setSelectedFileId(fileId);
-      // [MULTI-FILE UPGRADE] Clear issue view when manually selecting a file from tree
-      setAgentState(null);
-      setSuggestedCode(null);
-    }
+    setSelectedFileId(fileId);
+    // [MULTI-FILE UPGRADE] Clear issue view when manually selecting a file from tree
+    setAgentState(null);
+    setSuggestedCode(null);
   };
 
   const resetWorkspace = () => {
@@ -809,6 +810,7 @@ function App() {
     setIsInitializing(true);
     setIsDemoMode(false);
     setIsGuidedDemoActive(false);
+    fetchAuthStatus(); // Restore real auth state
     setTimeout(() => {
       setIsInitializing(false);
       setScreen('workspace');
@@ -847,6 +849,7 @@ function App() {
     setIsDemoMode(false);
     setIsGuidedDemoActive(false);
     setIsAgentMode(false);
+    fetchAuthStatus(); // Restore real auth state
     setScreen('landing');
     // Reset all demo states
     setFiles([]);
@@ -1029,9 +1032,12 @@ function App() {
               selectedFileId={selectedFileId} 
               setSelectedFileId={loadFileContent}
               onLog={addLog}
-              onRepoLoaded={(url) => {
+              onRepoLoaded={(url, loadedFiles) => {
                 setCurrentRepoUrl(url);
-                // [FIX] Do NOT auto-analyze on load
+                if (isAgentMode && loadedFiles && loadedFiles.length > 0) {
+                  // Repo loaded while Agent Mode is ON, start full scan!
+                  analyzeRepository(false, loadedFiles);
+                }
               }}
               onBeforeLoad={resetWorkspace}
               onDownloadProject={handleDownloadProject}

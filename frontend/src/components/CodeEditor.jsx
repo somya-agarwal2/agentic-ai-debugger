@@ -198,7 +198,7 @@ const CodeEditor = ({
 
         {/* ── Main Editor ── */}
         <div className="flex-1 relative group min-h-0">
-          {!activeFileName ? (
+          {!activeFileName || activeFileName === 'Editor' ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-12 bg-[#080C14]/60 backdrop-blur-[2px]">
               <div className="w-20 h-20 rounded-3xl bg-white/[0.02] border border-white/5 flex items-center justify-center mb-8 shadow-inner shadow-white/5">
                 <FileCode2 size={40} className="text-gray-800" />

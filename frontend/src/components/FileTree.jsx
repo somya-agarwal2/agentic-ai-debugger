@@ -196,7 +196,7 @@ const FileTree = ({ files, setFiles, selectedFileId, setSelectedFileId, onLog, o
         const res = await api.loadRepo(repoInput);
         const filesLoaded = Array.isArray(res?.files) ? res.files : [];
         setFiles(filesLoaded);
-        if (onRepoLoaded) onRepoLoaded(repoInput);
+        if (onRepoLoaded) onRepoLoaded(repoInput, filesLoaded);
         if (onLog) onLog(`Successfully loaded ${filesLoaded.length} files.`, 'success');
         if (filesLoaded.length > 0) setSelectedFileId(filesLoaded[0].id);
       }
@@ -228,7 +228,7 @@ const FileTree = ({ files, setFiles, selectedFileId, setSelectedFileId, onLog, o
         const res = await api.uploadProject(file);
         const filesUploaded = Array.isArray(res?.files) ? res.files : [];
         setFiles(filesUploaded);
-        if (onRepoLoaded) onRepoLoaded(''); // ZIP upload successful
+        if (onRepoLoaded) onRepoLoaded('', filesUploaded); // ZIP upload successful
         if (onLog) onLog(`Successfully uploaded ${filesUploaded.length} files.`, 'success');
         if (filesUploaded.length > 0) setSelectedFileId(filesUploaded[0].id);
       }
