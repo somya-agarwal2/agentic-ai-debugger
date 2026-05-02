@@ -5,6 +5,7 @@ import { Activity, Settings, Play, Zap, ShieldAlert, Loader2, FileCode2, Search,
 const CodeEditor = ({
   code = '', setCode, originalCode, suggestedCode = null, agentState = null,
   isAgentThinking, isAgentMode, setIsAgentMode,
+  isAutopilotMode, setIsAutopilotMode,
   onRunTests, onRunAgent,
   onFixApplied, onFixRejected, onCloseIssue, onCreatePR,
   activeFileName = 'main.py', isFixPanelOpen = false,
@@ -172,6 +173,21 @@ const CodeEditor = ({
             Agent Mode
             <div id="agent-toggle" className={`w-8 h-4 rounded-full relative transition-all duration-300 ${isAgentMode ? 'bg-green-500' : 'bg-gray-700'}`}>
               <div className={`w-2.5 h-2.5 rounded-full bg-white absolute top-0.5 transition-all duration-300 shadow ${isAgentMode ? 'left-5' : 'left-0.5'}`} />
+            </div>
+          </button>
+
+          <button 
+            onClick={setIsAutopilotMode}
+            className={`flex items-center gap-3 px-4 py-2 rounded-full border text-xs font-black tracking-tight transition-all duration-300 ${
+              isAutopilotMode
+                ? 'border-blue-500/40 bg-blue-500/10 text-blue-400 shadow-glow-blue'
+                : 'border-white/10 bg-white/5 text-gray-500 hover:border-white/20 hover:text-gray-400'
+            }`}
+          >
+            <Zap size={14} className={isAutopilotMode ? 'text-blue-400' : 'text-gray-600'} />
+            Autopilot
+            <div id="autopilot-toggle" className={`w-8 h-4 rounded-full relative transition-all duration-300 ${isAutopilotMode ? 'bg-blue-500' : 'bg-gray-700'}`}>
+              <div className={`w-2.5 h-2.5 rounded-full bg-white absolute top-0.5 transition-all duration-300 shadow ${isAutopilotMode ? 'left-5' : 'left-0.5'}`} />
             </div>
           </button>
 

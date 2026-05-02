@@ -107,6 +107,7 @@ function App() {
   const [agentState, setAgentState] = useState(null);
 
   const [isAgentMode, setIsAgentMode] = useState(false);
+  const [isAutopilotMode, setIsAutopilotMode] = useState(false);
   const [agentStatus, setAgentStatus] = useState('Idle');
   const [prDetails, setPrDetails] = useState(null);
   const [rejectedIssues, setRejectedIssues] = useState([]);
@@ -381,6 +382,19 @@ function App() {
         
         addLog(`Issue detected in ${fileName}: ${res.error}`, 'info');
         setAgentStatus('Monitoring');
+
+        // [AUTOPILOT MODE] Automatic Fix & PR Generation
+        if (isAutopilotMode && cleanCode) {
+          addLog(`[Autopilot] Automatically applying fix for ${fileName}...`, 'success');
+          updateFileContent(cleanCode, fileId);
+          setFixApplied(true);
+          
+          // Wait a moment for state to settle before PR
+          setTimeout(() => {
+            addLog(`[Autopilot] Automatically initiating Pull Request...`, 'loading');
+            executePRFromAutopilot(fileId, cleanCode);
+          }, 2000);
+        }
       } else {
         addLog(`No issues found in ${fileName}.`, 'success');
         setAgentStatus('Monitoring');
@@ -400,6 +414,28 @@ function App() {
         setIsAgentThinking(false);
         isAgentRunning.current = false;
       }
+    }
+  };
+  
+  const executePRFromAutopilot = async (fileId, fixedCode) => {
+    if (!user) {
+      addLog("[Autopilot] Login with GitHub required for automatic PR", "error");
+      return;
+    }
+    const currentFile = files?.find(f => f.id === fileId);
+    if (!currentFile || !fixedCode) return;
+
+    try {
+      const res = await api.createPR(currentRepoUrl, currentFile.path, fixedCode);
+      if (res?.success) {
+        addLog(`[Autopilot] PR created automatically: ${res?.pr_url}`, 'success');
+        setPrUrl(res?.pr_url);
+        setPipelineStep('pr');
+      } else {
+        addLog(`[Autopilot] PR Failed: ${res?.error || "Unknown error"}`, 'error');
+      }
+    } catch (e) {
+      addLog(`[Autopilot] PR Error: ${e.message}`, 'error');
     }
   };
 
@@ -1061,6 +1097,8 @@ function App() {
           isAgentThinking={isAgentThinking}
           isAgentMode={isAgentMode}
           setIsAgentMode={toggleAgentMode}
+          isAutopilotMode={isAutopilotMode}
+          setIsAutopilotMode={() => setIsAutopilotMode(!isAutopilotMode)}
           onRunTests={manualRunTests}
           onRunAgent={manualRunAgent}
           onFixApplied={handleFileApplied}
