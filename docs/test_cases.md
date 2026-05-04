@@ -77,8 +77,11 @@ This document outlines the test scenarios required to verify the functionality o
 ## 5. Deployment & Production (Render/Vercel)
 
 ### TC-09: Production API Connectivity
-- **Action:** Access the deployed Vercel URL.
+- **Precondition:** Vercel has `VITE_API_URL` set to the deployed Render backend URL, and the backend has `FRONTEND_URL` set to the deployed Vercel origin.
+- **Action:** Open the deployed Vercel URL, hard refresh the page, and trigger at least one backend request such as GitHub auth check, prompt loading, or test execution.
 - **Expected:**
-  - Frontend connects to the Render backend via `VITE_API_URL`.
-  - No `localhost:5000` errors in the browser console.
-  - Authentication session persists across page refreshes.
+  - All API requests are sent to the Render backend configured by `VITE_API_URL`.
+  - No request is made to `localhost:5000` from the production build.
+  - Browser console shows no CORS, mixed-content, or network base URL errors.
+  - Backend responses return successfully for public endpoints such as `/auth/github/check`.
+  - After GitHub login, the OAuth redirect returns to the Vercel app and the session remains active after a page refresh.
