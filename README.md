@@ -110,6 +110,6 @@ FRONTEND_URL=http://localhost:5173
 
 ## 🛡️ License
 
-This project is licensed for use by the **Agentic AI Debugger project team members** only.
+This project is maintained by the **Agentic AI Debugger project team**.
 
-All source code, documentation, design assets, and related project materials are owned by the team. Usage, modification, sharing, or deployment outside the team requires prior approval from the project maintainers.
+Anyone may clone, run, and test this project locally for learning, evaluation, or demonstration purposes. If you want to contribute improvements or modifications, please create a Pull Request so the team can review and approve the changes.
