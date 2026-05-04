@@ -195,7 +195,7 @@ const ChallengePage = ({ onBackToHome }) => {
   const handleAISolve = () => {
     const current = CHALLENGES[currentChallengeIndex];
     setUserInput(current.solution);
-    setFeedback("AI Agent: Solution applied to editor. Click 'Submit Fix' to verify.");
+    setFeedback("AI Agent: Solution applied to editor. Click 'Submit Fix' to verify the result.");
   };
 
   const handleNextChallenge = () => {
