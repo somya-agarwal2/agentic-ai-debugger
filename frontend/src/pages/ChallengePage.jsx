@@ -62,7 +62,7 @@ const isExactMatch = (input, solution) => {
 const PERSONALITIES = {
   Friendly: { feedback: "Nice try! You're getting closer! ✨", success: "Amazing work! You're a natural! 🎉" },
   Strict: { feedback: "Incorrect logic. Analyze the constraints again.", success: "Logic verified. Correct." },
-  Funny: { feedback: "Bro ye minus kyu kiya 😭", success: "Woaah, big brain move right there! 🧠🔥" }
+  Funny: { feedback: "Bro there is no need of minus 😭", success: "Woaah, big brain move right there! 🧠🔥" }
 };
 
 const ChallengePage = ({ onBackToHome }) => {
