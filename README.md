@@ -110,4 +110,6 @@ FRONTEND_URL=http://localhost:5173
 
 ## 🛡️ License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed for use by the **Agentic AI Debugger project team members** only.
+
+All source code, documentation, design assets, and related project materials are owned by the team. Usage, modification, sharing, or deployment outside the team requires prior approval from the project maintainers.
