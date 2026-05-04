@@ -64,12 +64,12 @@ This is where the "intelligence" lives. It is composed of:
 
 ## 🔄 Core Data Flow: The "Agentic Cycle"
 
-1.  **Ingestion**: User uploads a ZIP or provides a GitHub URL. Backend clones/extracts code into a `temp` folder.
-2.  **Monitoring**: Frontend detects a file selection or change and sends the code to `/agent-run`.
-3.  **Analysis**:
-    *   Engine runs a **Static Scan** (Syntax/Patterns).
-    *   Engine runs a **Dynamic Trace** (Execution path).
-    *   Engine sends code + trace + syntax issues to **Grok**.
-4.  **Fixing**: Grok returns a JSON fix. The Engine attempts to **Run Tests** on the new code.
-5.  **Reporting**: If tests pass, the fix is returned to the UI. If they fail, the Engine iterates one more time to improve the fix.
-6.  **Resolution**: User reviews the diff and clicks "Open PR" to push the fix back to GitHub.
+1.  **Workspace Intake**: The user uploads a ZIP project or submits a GitHub repository URL. The backend creates an isolated temporary workspace, then extracts or clones the source code into it.
+2.  **Run Trigger**: When the user selects or edits code, the frontend sends the active file content to `/agent-run` and begins tracking the agent's progress.
+3.  **Context Building**:
+    *   The engine performs a **Static Scan** to catch syntax errors and known risky patterns early.
+    *   The engine performs a **Dynamic Trace** to capture the runtime path, logs, and execution failures.
+    *   The engine packages the source code, static findings, and runtime trace into a structured request for **Grok**.
+4.  **Patch Generation**: Grok returns a structured JSON response containing the diagnosis and proposed fix. The engine applies the candidate change inside the temporary workspace.
+5.  **Validation Loop**: The engine runs the available tests against the patched code. If validation fails, the failure output is fed back into one additional repair attempt before the final result is prepared.
+6.  **Review & PR Handoff**: The UI presents the explanation, test result, and diff for review. Once the user clicks "Open PR", the backend uses GitHub integration to publish the verified fix as a pull request.
