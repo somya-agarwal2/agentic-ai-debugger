@@ -48,7 +48,7 @@ const CHALLENGES= [
     return -1`,
     solution: "while low <= high:",
     hints: ["Check the while condition", "What happens if target is at the last position?", "The loop should continue as long as the search range is valid"],
-    explanation: "The condition 'low < high' misses the case where low and high are equal, which is necessary for target at boundary.",
+    explanation: "Check 'low < high' misses the case where low and high are equal, which is necessary for target at boundary.",
     bugLine: 4
   }
 ];
