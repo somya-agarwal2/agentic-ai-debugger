@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Timer as TimerIcon, Play, CheckCircle2, XCircle, ChevronRight, Brain, Code as CodeIcon, Trophy, AlertCircle, RefreshCw, Home, ArrowLeft } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 
-const CHALLENGES = [
+const CHALLENGES= [
   {
     level: "Easy",
     title: "Calculate Average",
@@ -13,7 +13,7 @@ const CHALLENGES = [
     average = total / len(nums) - 1   # bug
     return average`,
     solution: "average = total / len(nums)",
-    hints: ["Check the return value calculation", "Why is there a '- 1' at the end?", "The formula for average is just total / count"],
+    hints: ["Check the calculated return value", "Why is there a '- 1' at the end?", "The formula for average is just total / count"],
     explanation: "You subtracted 1 from the average, which reduces the result incorrectly. The correct formula is total / length.",
     bugLine: 5
   },
