@@ -93,8 +93,18 @@ Retrieves the current dynamic prompts used by the AI engine.
 - **Response (200):** JSON map of prompts (e.g., `analyze_prompt`, `fix_prompt`).
 
 ### `POST /prompts`
-Updates the system prompts in real-time.
-- **Body:** `{ "prompt_name": "new content" }`.
+Updates the dynamic AI prompt configuration used by future agent runs.
+- **Body:** JSON object where each key is a prompt identifier and each value is the full prompt text.
+  ```json
+  {
+    "analyze_prompt": "Analyze the following code and report bugs: {code}",
+    "fix_prompt": "Fix this code: {code}. Error details: {error_details}",
+    "planner_prompt": "Plan a repository scan for: {repo_path}. Files: {file_list}",
+    "decision_prompt": "Prioritize issues from this list: {issues_list}"
+  }
+  ```
 - **Response (200):** `{ "success": true }`.
+- **Response (400):** `{ "success": false, "error": "Prompt '<name>' is too short or invalid" }`.
+- **Notes:** Prompt values must be non-empty strings with at least five non-whitespace characters. Changes are persisted to `config/prompts.json` and applied on the next agent cycle.
 
 ---
